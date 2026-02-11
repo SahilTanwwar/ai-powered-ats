@@ -1,23 +1,18 @@
-import { Sequelize } from "sequelize";
-import { env } from "./env.js";
+const { Sequelize } = require("sequelize");
 
-export const sequelize = new Sequelize(
-  env.db.name,
-  env.db.user,
-  env.db.password,
-  {
-    host: env.db.host,
-    dialect: env.db.dialect,
-    logging: false,
-  }
-);
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
+  dialect: "postgres",
+  logging: false,
+});
 
-export const connectDB = async () => {
+const connectDB = async () => {
   try {
     await sequelize.authenticate();
-    console.log("✅ Database connected");
-  } catch (error) {
-    console.error("❌ DB connection failed:", error.message);
+    console.log("✅ PostgreSQL connected successfully");
+  } catch (err) {
+    console.error("❌ DB connection failed:", err.message);
     process.exit(1);
   }
 };
+
+module.exports = { connectDB, sequelize };
