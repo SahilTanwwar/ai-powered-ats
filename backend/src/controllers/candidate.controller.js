@@ -6,43 +6,78 @@ const {
 const uploadCandidate = async (req, res) => {
   try {
     const { name, email, phone, jobId } = req.body;
+
+    // Basic validation
+    if (!name || !email || !jobId) {
+      return res.status(400).json({
+        message: "Name, email and jobId are required",
+      });
+    }
+
     if (!req.file) {
-      return res.status(400).json({ message: "Resume file is required" });
+      return res.status(400).json({
+        message: "Resume file is required",
+      });
+    }
+
+    // Convert jobId to integer
+    const parsedJobId = parseInt(jobId, 10);
+
+    if (isNaN(parsedJobId)) {
+      return res.status(400).json({
+        message: "jobId must be a valid integer",
+      });
     }
 
     const candidate = await createCandidate({
       name,
       email,
       phone,
-      jobId,
-      recruiterId: req.user.id,
+      jobId: parsedJobId,
+      recruiterId: parseInt(req.user.id, 10),
       resumePath: req.file.path,
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       data: candidate,
     });
+
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Upload Candidate Error:", error);
+
+    return res.status(500).json({
+      message: error.message || "Internal Server Error",
+    });
   }
 };
 
 const listCandidates = async (req, res) => {
   try {
-    const { jobId } = req.params;
+    const parsedJobId = parseInt(req.params.jobId, 10);
+
+    if (isNaN(parsedJobId)) {
+      return res.status(400).json({
+        message: "jobId must be a valid integer",
+      });
+    }
 
     const candidates = await getCandidatesByJob(
-      jobId,
-      req.user.id
+      parsedJobId,
+      parseInt(req.user.id, 10)
     );
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       data: candidates,
     });
+
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("List Candidates Error:", error);
+
+    return res.status(500).json({
+      message: error.message || "Internal Server Error",
+    });
   }
 };
 
