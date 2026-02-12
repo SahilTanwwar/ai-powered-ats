@@ -1,8 +1,8 @@
-import dotenv from "dotenv";
+const dotenv = require("dotenv");
 
 dotenv.config();
 
-export const env = {
+const env = {
   port: process.env.PORT || 5000,
   db: {
     host: process.env.DB_HOST,
@@ -13,3 +13,5 @@ export const env = {
   },
   jwtSecret: process.env.JWT_SECRET,
 };
+
+module.exports = { env };
