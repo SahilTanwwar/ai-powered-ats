@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 
-const jobRoutes = require("./routes/job");
+const jobRoutes = require("./routes/Job");
 const candidateRoutes = require("./routes/candidate.routes");
 const authRoutes = require("./routes/auth");
 const protectedRoutes = require("./routes/protected");

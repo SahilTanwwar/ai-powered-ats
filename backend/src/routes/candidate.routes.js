@@ -1,9 +1,11 @@
 const express = require("express");
 const upload = require("../config/multer");
-const {
-  uploadCandidate,
+const { 
+  uploadCandidate, 
   listCandidates,
+  getInterviewQuestions 
 } = require("../controllers/candidate.controller");
+
 const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
@@ -20,5 +22,12 @@ router.get(
   authMiddleware,
   listCandidates
 );
+
+router.get(
+  "/:candidateId/interview-questions",
+  authMiddleware,
+  getInterviewQuestions
+);
+
 
 module.exports = router;

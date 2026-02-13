@@ -1,7 +1,12 @@
 const { extractResumeText } = require("../utils/resumeTextExtractor");
 const Candidate = require("../models/candidate.model");
 const Job = require("../models/job.js");
-const { parseResumeToJson, scoreResumeAgainstJob } = require("./ai.service");
+const { 
+  parseResumeToJson, 
+  scoreResumeAgainstJob,
+  generateInterviewQuestions
+} = require("./ai.service");
+
 
 // 🔥 CREATE CANDIDATE WITH AI PIPELINE
 const createCandidate = async (data) => {
@@ -72,4 +77,37 @@ const getCandidatesByJob = async (jobId, recruiterId) => {
   });
 };
 
-module.exports = { createCandidate, getCandidatesByJob };
+
+const generateCandidateInterviewQuestions = async (candidateId, recruiterId) => {
+  const candidate = await Candidate.findOne({
+    where: { id: candidateId, recruiterId },
+  });
+
+  if (!candidate) {
+    throw new Error("Candidate not found");
+  }
+
+  const job = await Job.findByPk(candidate.jobId);
+
+  if (!job) {
+    throw new Error("Job not found");
+  }
+
+  if (!candidate.extractedText) {
+    throw new Error("Resume text not available");
+  }
+
+  const questionsData = await generateInterviewQuestions(
+    candidate.extractedText,
+    job
+  );
+
+  return questionsData.questions;
+};
+
+module.exports = {
+  createCandidate,
+  getCandidatesByJob,
+  generateCandidateInterviewQuestions, // 👈 add
+};
+

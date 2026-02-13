@@ -1,7 +1,9 @@
 const {
   createCandidate,
   getCandidatesByJob,
+  generateCandidateInterviewQuestions
 } = require("../services/candidate.service");
+
 
 
 // 🚀 Upload Candidate
@@ -105,9 +107,41 @@ const listCandidates = async (req, res) => {
     });
   }
 };
+const { validate: isUuid } = require("uuid");
+
+const getInterviewQuestions = async (req, res) => {
+  try {
+    const { candidateId } = req.params;
+
+    if (!isUuid(candidateId)) {
+      return res.status(400).json({
+        message: "Invalid candidateId format",
+      });
+    }
+
+    const questions = await generateCandidateInterviewQuestions(
+      candidateId,
+      parseInt(req.user.id, 10)
+    );
+
+    return res.status(200).json({
+      success: true,
+      questions,
+    });
+
+  } catch (error) {
+    console.error("Interview Questions Error:", error);
+
+    return res.status(500).json({
+      message: error.message || "Internal Server Error",
+    });
+  }
+};
+
 
 
 module.exports = {
   uploadCandidate,
   listCandidates,
+  getInterviewQuestions,  // 👈 add
 };

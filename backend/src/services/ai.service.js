@@ -77,7 +77,48 @@ Return ONLY JSON:
   return safeJsonParse(text);
 }
 
+// 🔹 Generate Interview Questions
+async function generateInterviewQuestions(resumeText, job) {
+  const prompt = `
+You are an expert technical interviewer.
+
+Based on the resume and job description below,
+generate 5 technical interview questions.
+
+Focus on:
+- Required job skills
+- Candidate's experience
+- Real-world practical understanding
+
+Return ONLY JSON in this format:
+{
+  "questions": [
+    "Question 1",
+    "Question 2",
+    "Question 3",
+    "Question 4",
+    "Question 5"
+  ]
+}
+
+Job Title: ${job.title}
+Job Description: ${job.description}
+Required Skills: ${job.requiredSkills.join(", ")}
+
+Resume:
+${resumeText}
+`;
+
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
+  const text = response.text();
+
+  return safeJsonParse(text);
+}
+
+
 module.exports = {
   parseResumeToJson,
   scoreResumeAgainstJob,
+  generateInterviewQuestions,  // 👈 add this
 };
