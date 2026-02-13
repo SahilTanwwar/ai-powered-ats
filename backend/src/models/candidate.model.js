@@ -50,6 +50,28 @@ const Candidate = sequelize.define(
       allowNull: true,
     },
 
+    // ✅ NEW AI STRUCTURED FIELDS
+
+    aiParsedJson: {
+      type: DataTypes.JSONB, // Postgres optimized JSON storage
+      allowNull: true,
+    },
+
+    aiSummary: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+
+    aiMatchReason: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+
+    aiUpdatedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+
     status: {
       type: DataTypes.ENUM("APPLIED", "SHORTLISTED", "REJECTED"),
       defaultValue: "APPLIED",
@@ -57,6 +79,7 @@ const Candidate = sequelize.define(
   },
   {
     tableName: "candidates",
+    timestamps: true, // ensures createdAt & updatedAt
   }
 );
 

@@ -3,11 +3,12 @@ const {
   getCandidatesByJob,
 } = require("../services/candidate.service");
 
+
+// 🚀 Upload Candidate
 const uploadCandidate = async (req, res) => {
   try {
     const { name, email, phone, jobId } = req.body;
 
-    // Basic validation
     if (!name || !email || !jobId) {
       return res.status(400).json({
         message: "Name, email and jobId are required",
@@ -20,7 +21,6 @@ const uploadCandidate = async (req, res) => {
       });
     }
 
-    // Convert jobId to integer
     const parsedJobId = parseInt(jobId, 10);
 
     if (isNaN(parsedJobId)) {
@@ -36,11 +36,23 @@ const uploadCandidate = async (req, res) => {
       jobId: parsedJobId,
       recruiterId: parseInt(req.user.id, 10),
       resumePath: req.file.path,
+      filePath: req.file.path,
     });
 
     return res.status(201).json({
       success: true,
-      data: candidate,
+      data: {
+        id: candidate.id,
+        name: candidate.name,
+        email: candidate.email,
+        phone: candidate.phone,
+        jobId: candidate.jobId,
+        status: candidate.status,
+        aiScore: candidate.aiScore,
+        aiMatchReason: candidate.aiMatchReason,
+        summary: candidate.aiParsedJson?.summary || null,
+        createdAt: candidate.createdAt,
+      },
     });
 
   } catch (error) {
@@ -52,6 +64,9 @@ const uploadCandidate = async (req, res) => {
   }
 };
 
+
+
+// 📊 List Candidates (Ranked + Sanitized)
 const listCandidates = async (req, res) => {
   try {
     const parsedJobId = parseInt(req.params.jobId, 10);
@@ -69,7 +84,17 @@ const listCandidates = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      data: candidates,
+      data: candidates.map((candidate, index) => ({
+        rank: index + 1, // 🏆 Ranked based on aiScore
+        id: candidate.id,
+        name: candidate.name,
+        email: candidate.email,
+        status: candidate.status,
+        aiScore: candidate.aiScore,
+        aiMatchReason: candidate.aiMatchReason,
+        summary: candidate.aiParsedJson?.summary || null,
+        createdAt: candidate.createdAt,
+      })),
     });
 
   } catch (error) {
@@ -81,4 +106,8 @@ const listCandidates = async (req, res) => {
   }
 };
 
-module.exports = { uploadCandidate, listCandidates };
+
+module.exports = {
+  uploadCandidate,
+  listCandidates,
+};
