@@ -1,9 +1,10 @@
 const {
   createCandidate,
   getCandidatesByJob,
-  generateCandidateInterviewQuestions
+  generateCandidateInterviewQuestions,
 } = require("../services/candidate.service");
 
+const { validate: isUuid } = require("uuid");
 
 
 // 🚀 Upload Candidate
@@ -50,7 +51,20 @@ const uploadCandidate = async (req, res) => {
         phone: candidate.phone,
         jobId: candidate.jobId,
         status: candidate.status,
-        aiScore: candidate.aiScore,
+
+        // 🔥 Final ATS Score
+        hybridScore: candidate.hybridScore,
+
+        // 🤖 LLM Opinion Score
+        llmScore: candidate.aiScore,
+
+        // 📊 Score Breakdown
+        breakdown: {
+          skills: candidate.scoreBreakdown?.skills || 0,
+          semantic: candidate.scoreBreakdown?.semantic || 0,
+          experience: candidate.scoreBreakdown?.experience || 0,
+        },
+
         aiMatchReason: candidate.aiMatchReason,
         summary: candidate.aiParsedJson?.summary || null,
         createdAt: candidate.createdAt,
@@ -67,8 +81,7 @@ const uploadCandidate = async (req, res) => {
 };
 
 
-
-// 📊 List Candidates (Ranked + Sanitized)
+// 📊 List Candidates (HYBRID Ranked + Clean)
 const listCandidates = async (req, res) => {
   try {
     const parsedJobId = parseInt(req.params.jobId, 10);
@@ -87,12 +100,26 @@ const listCandidates = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: candidates.map((candidate, index) => ({
-        rank: index + 1, // 🏆 Ranked based on aiScore
+        rank: index + 1, // 🏆 Ranked based on hybridScore
+
         id: candidate.id,
         name: candidate.name,
         email: candidate.email,
         status: candidate.status,
-        aiScore: candidate.aiScore,
+
+        // 🔥 Final Hybrid Score
+        atsScore: candidate.hybridScore,
+
+        // 🤖 LLM Score (separate)
+        // llmScore: candidate.aiScore,
+
+        // 📊 Breakdown visible for recruiter
+        breakdown: {
+          skills: candidate.scoreBreakdown?.skills || 0,
+          semantic: candidate.scoreBreakdown?.semantic || 0,
+          experience: candidate.scoreBreakdown?.experience || 0,
+        },
+
         aiMatchReason: candidate.aiMatchReason,
         summary: candidate.aiParsedJson?.summary || null,
         createdAt: candidate.createdAt,
@@ -107,8 +134,9 @@ const listCandidates = async (req, res) => {
     });
   }
 };
-const { validate: isUuid } = require("uuid");
 
+
+// 🎯 Generate Interview Questions
 const getInterviewQuestions = async (req, res) => {
   try {
     const { candidateId } = req.params;
@@ -139,9 +167,8 @@ const getInterviewQuestions = async (req, res) => {
 };
 
 
-
 module.exports = {
   uploadCandidate,
   listCandidates,
-  getInterviewQuestions,  // 👈 add
+  getInterviewQuestions,
 };

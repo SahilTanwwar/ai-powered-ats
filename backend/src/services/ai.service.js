@@ -34,6 +34,8 @@ Format:
   "projects": [],
   "certifications": [],
   "summary": ""
+  "totalExperienceYears": 0
+
 }
 
 Resume:
@@ -115,10 +117,41 @@ ${resumeText}
 
   return safeJsonParse(text);
 }
+function cosineSimilarity(a, b) {
+  let dot = 0, normA = 0, normB = 0;
+  for (let i = 0; i < a.length; i++) {
+    dot += a[i] * b[i];
+    normA += a[i] * a[i];
+    normB += b[i] * b[i];
+  }
+  return dot / (Math.sqrt(normA) * Math.sqrt(normB));
+}
+
+async function getEmbedding(text) {
+  const embedModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
+  const result = await embedModel.embedContent(text);
+  return result.embedding.values;
+}
+
+async function semanticMatchScore(resumeText, job) {
+  const jobText = `Title: ${job.title}\nDescription: ${job.description}\nSkills: ${job.requiredSkills.join(", ")}`;
+
+  const [resumeVec, jobVec] = await Promise.all([
+    getEmbedding(resumeText.slice(0, 12000)),
+    getEmbedding(jobText.slice(0, 12000)),
+  ]);
+
+  const sim = cosineSimilarity(resumeVec, jobVec); // typically -1..1 but usually 0..1
+  const score = Math.max(0, Math.min(100, Math.round(sim * 100)));
+
+  return { similarity: sim, score };
+}
+
 
 
 module.exports = {
   parseResumeToJson,
   scoreResumeAgainstJob,
-  generateInterviewQuestions,  // 👈 add this
+  generateInterviewQuestions,
+  semanticMatchScore,
 };

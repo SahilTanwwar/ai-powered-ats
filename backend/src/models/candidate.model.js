@@ -71,6 +71,24 @@ const Candidate = sequelize.define(
       type: DataTypes.DATE,
       allowNull: true,
     },
+    hybridScore: {
+  type: DataTypes.FLOAT,
+  allowNull: true,
+},
+scoreBreakdown: {
+  type: DataTypes.JSONB,
+  allowNull: true,
+},
+hybridScore: {
+  type: DataTypes.FLOAT,
+  allowNull: true,
+},
+scoreBreakdown: {
+  type: DataTypes.JSONB,
+  allowNull: true,
+},
+
+
 
     status: {
       type: DataTypes.ENUM("APPLIED", "SHORTLISTED", "REJECTED"),
