@@ -7,9 +7,20 @@ const router = express.Router();
 
 router.post("/register", async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password } = req.body || {};
 
-    const existingUser = await User.findOne({ where: { email } });
+    if (
+      typeof email !== "string" ||
+      !email.trim() ||
+      typeof password !== "string" ||
+      password.length < 6
+    ) {
+      return res.status(400).json({
+        message: "Valid email and password (min 6 chars) are required",
+      });
+    }
+
+    const existingUser = await User.findOne({ where: { email: email.trim() } });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
@@ -17,12 +28,11 @@ router.post("/register", async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({
-      email,
+      email: email.trim(),
       password: hashedPassword,
     });
 
     res.status(201).json({ message: "User created", userId: user.id });
-
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
@@ -30,9 +40,20 @@ router.post("/register", async (req, res) => {
 
 router.post("/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password } = req.body || {};
 
-    const user = await User.findOne({ where: { email } });
+    if (
+      typeof email !== "string" ||
+      !email.trim() ||
+      typeof password !== "string" ||
+      !password
+    ) {
+      return res.status(400).json({
+        message: "Email and password are required",
+      });
+    }
+
+    const user = await User.findOne({ where: { email: email.trim() } });
     if (!user) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
@@ -49,7 +70,6 @@ router.post("/login", async (req, res) => {
     );
 
     res.json({ token });
-
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }

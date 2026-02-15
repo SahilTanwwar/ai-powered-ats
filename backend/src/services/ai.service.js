@@ -17,7 +17,7 @@ function safeJsonParse(text) {
   }
 }
 
-// 🔹 Resume → Structured JSON
+// Resume -> Structured JSON
 async function parseResumeToJson(resumeText) {
   const prompt = `
 Extract structured information from this resume.
@@ -33,9 +33,8 @@ Format:
   "experience": [],
   "projects": [],
   "certifications": [],
-  "summary": ""
+  "summary": "",
   "totalExperienceYears": 0
-
 }
 
 Resume:
@@ -49,7 +48,7 @@ ${resumeText}
   return safeJsonParse(text);
 }
 
-// 🔹 Resume → Job Matching Score
+// Resume -> Job Matching Score
 async function scoreResumeAgainstJob(resumeText, job) {
   const prompt = `
 You are an expert AI recruiter.
@@ -58,7 +57,7 @@ Compare this resume with the job description.
 
 Job Title: ${job.title}
 Job Description: ${job.description}
-Required Skills: ${job.requiredSkills.join(", ")}
+Required Skills: ${(job.requiredSkills || []).join(", ")}
 
 Resume:
 ${resumeText}
@@ -79,7 +78,7 @@ Return ONLY JSON:
   return safeJsonParse(text);
 }
 
-// 🔹 Generate Interview Questions
+// Generate Interview Questions
 async function generateInterviewQuestions(resumeText, job) {
   const prompt = `
 You are an expert technical interviewer.
@@ -105,7 +104,7 @@ Return ONLY JSON in this format:
 
 Job Title: ${job.title}
 Job Description: ${job.description}
-Required Skills: ${job.requiredSkills.join(", ")}
+Required Skills: ${(job.requiredSkills || []).join(", ")}
 
 Resume:
 ${resumeText}
@@ -117,37 +116,45 @@ ${resumeText}
 
   return safeJsonParse(text);
 }
+
 function cosineSimilarity(a, b) {
-  let dot = 0, normA = 0, normB = 0;
+  let dot = 0;
+  let normA = 0;
+  let normB = 0;
   for (let i = 0; i < a.length; i++) {
     dot += a[i] * b[i];
     normA += a[i] * a[i];
     normB += b[i] * b[i];
   }
+
+  if (!normA || !normB) {
+    return 0;
+  }
+
   return dot / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
 async function getEmbedding(text) {
-  const embedModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
+  const embedModel = genAI.getGenerativeModel({
+    model: process.env.GEMINI_EMBEDDING_MODEL || "gemini-embedding-001",
+  });
   const result = await embedModel.embedContent(text);
   return result.embedding.values;
 }
 
 async function semanticMatchScore(resumeText, job) {
-  const jobText = `Title: ${job.title}\nDescription: ${job.description}\nSkills: ${job.requiredSkills.join(", ")}`;
+  const jobText = `Title: ${job.title}\nDescription: ${job.description}\nSkills: ${(job.requiredSkills || []).join(", ")}`;
 
   const [resumeVec, jobVec] = await Promise.all([
     getEmbedding(resumeText.slice(0, 12000)),
     getEmbedding(jobText.slice(0, 12000)),
   ]);
 
-  const sim = cosineSimilarity(resumeVec, jobVec); // typically -1..1 but usually 0..1
+  const sim = cosineSimilarity(resumeVec, jobVec);
   const score = Math.max(0, Math.min(100, Math.round(sim * 100)));
 
   return { similarity: sim, score };
 }
-
-
 
 module.exports = {
   parseResumeToJson,

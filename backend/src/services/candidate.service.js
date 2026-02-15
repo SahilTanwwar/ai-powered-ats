@@ -6,6 +6,7 @@ const {
   parseResumeToJson,
   scoreResumeAgainstJob,
   generateInterviewQuestions,
+  semanticMatchScore,
 } = require("./ai.service");
 
 const {
@@ -14,70 +15,56 @@ const {
   computeExperienceScore,
 } = require("../utils/hybridScoring");
 
-
-// 🔥 CREATE CANDIDATE WITH HYBRID SCORING (Debug Version)
+// CREATE CANDIDATE WITH HYBRID SCORING
 const createCandidate = async (data) => {
-  const { filePath, jobId } = data;
+  const { filePath, jobId, recruiterId } = data;
+
+  const job = await Job.findOne({
+    where: { id: jobId, userId: recruiterId },
+  });
+
+  if (!job) {
+    const error = new Error("Job not found");
+    error.statusCode = 404;
+    throw error;
+  }
 
   const candidate = await Candidate.create(data);
 
   if (!filePath) return candidate;
 
   try {
-    // 1️⃣ Extract Resume Text
     const extractedText = await extractResumeText(filePath);
     await candidate.update({ extractedText });
 
-    // 2️⃣ Fetch Job
-    const job = await Job.findByPk(jobId);
-    if (!job) return candidate;
-
     try {
-      // 3️⃣ Parse Resume → Structured JSON
       const parsedJson = await parseResumeToJson(extractedText);
 
-      // 🔥 DEBUG START
-      console.log("======== DEBUG START ========");
-      console.log("Job requiredSkills:", job.requiredSkills);
-      console.log("Parsed skills:", parsedJson.skills);
-      console.log("Job experienceRequired:", job.experienceRequired);
-      console.log("Parsed totalExperienceYears:", parsedJson.totalExperienceYears);
-      console.log("======== DEBUG END ==========");
-      // 🔥 DEBUG END
-
-      // 4️⃣ Skill Match Score
       const skillResult = computeSkillMatchScore(
         job.requiredSkills || [],
         parsedJson.skills || []
       );
 
-      // 5️⃣ Experience Score
       const requiredMinYears = parseRequiredYears(job.experienceRequired || "");
       const candidateYears = Number(parsedJson.totalExperienceYears || 0);
 
-      const expScore = computeExperienceScore(
-        candidateYears,
-        requiredMinYears
-      );
+      const expScore = computeExperienceScore(candidateYears, requiredMinYears);
+      const semanticResult = await semanticMatchScore(extractedText, job);
 
-      // 🔥 6️⃣ Final Hybrid Score (70% skills, 30% experience)
-      const WEIGHTS = { skills: 0.7, experience: 0.3 };
+      const WEIGHTS = { skills: 0.5, semantic: 0.3, experience: 0.2 };
 
       const hybridScore = Math.round(
-        skillResult.score * WEIGHTS.skills +
-        expScore * WEIGHTS.experience
+        skillResult.score * WEIGHTS.skills
+          + semanticResult.score * WEIGHTS.semantic
+          + expScore * WEIGHTS.experience
       );
 
-      // 7️⃣ Auto Status Logic
       let newStatus = "APPLIED";
-
       if (hybridScore >= 80) newStatus = "SHORTLISTED";
       else if (hybridScore < 40) newStatus = "REJECTED";
 
-      // 8️⃣ Optional LLM Explanation
       const scoreData = await scoreResumeAgainstJob(extractedText, job);
 
-      // 9️⃣ Update Candidate Record
       await candidate.update({
         aiParsedJson: parsedJson,
         aiScore: scoreData.score,
@@ -85,6 +72,7 @@ const createCandidate = async (data) => {
         hybridScore,
         scoreBreakdown: {
           skills: skillResult.score,
+          semantic: semanticResult.score,
           experience: expScore,
           matchedSkills: skillResult.matchedSkills,
           missingSkills: skillResult.missingSkills,
@@ -94,7 +82,6 @@ const createCandidate = async (data) => {
         status: newStatus,
         aiUpdatedAt: new Date(),
       });
-
     } catch (aiError) {
       console.error("AI Processing Failed:", aiError.message);
 
@@ -102,7 +89,6 @@ const createCandidate = async (data) => {
         aiMatchReason: "AI processing failed",
       });
     }
-
   } catch (extractError) {
     console.error("Resume Extraction Failed:", extractError.message);
   }
@@ -110,8 +96,7 @@ const createCandidate = async (data) => {
   return candidate;
 };
 
-
-// ✅ Get Candidates By Job
+// Get Candidates By Job
 const getCandidatesByJob = async (jobId, recruiterId) => {
   return await Candidate.findAll({
     where: { jobId, recruiterId },
@@ -123,8 +108,7 @@ const getCandidatesByJob = async (jobId, recruiterId) => {
   });
 };
 
-
-// ✅ Generate Interview Questions
+// Generate Interview Questions
 const generateCandidateInterviewQuestions = async (candidateId, recruiterId) => {
   const candidate = await Candidate.findOne({
     where: { id: candidateId, recruiterId },
@@ -151,7 +135,6 @@ const generateCandidateInterviewQuestions = async (candidateId, recruiterId) => 
 
   return questionsData.questions;
 };
-
 
 module.exports = {
   createCandidate,

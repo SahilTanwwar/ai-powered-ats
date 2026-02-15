@@ -74,7 +74,7 @@ const uploadCandidate = async (req, res) => {
   } catch (error) {
     console.error("Upload Candidate Error:", error);
 
-    return res.status(500).json({
+    return res.status(error.statusCode || 500).json({
       message: error.message || "Internal Server Error",
     });
   }
