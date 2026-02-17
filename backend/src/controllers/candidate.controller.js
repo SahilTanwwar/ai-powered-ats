@@ -52,19 +52,21 @@ const uploadCandidate = async (req, res) => {
         jobId: candidate.jobId,
         status: candidate.status,
 
-        // 🔥 Final ATS Score
-        hybridScore: candidate.hybridScore,
+        // ✅ ATS Score (hybrid: skills 50% + semantic 30% + experience 20%)
+        atsScore: candidate.hybridScore,
 
-        // 🤖 LLM Opinion Score
-        llmScore: candidate.aiScore,
-
-        // 📊 Score Breakdown
+        // 📊 Score Breakdown — how the ATS score was computed
         breakdown: {
           skills: candidate.scoreBreakdown?.skills || 0,
           semantic: candidate.scoreBreakdown?.semantic || 0,
           experience: candidate.scoreBreakdown?.experience || 0,
         },
 
+        // 🎯 Matched & Missing Skills (extracted by AI)
+        matchedSkills: candidate.scoreBreakdown?.matchedSkills || [],
+        missingSkills: candidate.scoreBreakdown?.missingSkills || [],
+
+        // 🤖 AI Insight
         aiMatchReason: candidate.aiMatchReason,
         summary: candidate.aiParsedJson?.summary || null,
         createdAt: candidate.createdAt,
@@ -107,19 +109,21 @@ const listCandidates = async (req, res) => {
         email: candidate.email,
         status: candidate.status,
 
-        // 🔥 Final Hybrid Score
+        // ✅ ATS Score (hybrid: skills 50% + semantic 30% + experience 20%)
         atsScore: candidate.hybridScore,
 
-        // 🤖 LLM Score (separate)
-        // llmScore: candidate.aiScore,
-
-        // 📊 Breakdown visible for recruiter
+        // 📊 Score Breakdown
         breakdown: {
           skills: candidate.scoreBreakdown?.skills || 0,
           semantic: candidate.scoreBreakdown?.semantic || 0,
           experience: candidate.scoreBreakdown?.experience || 0,
         },
 
+        // 🎯 Matched & Missing Skills
+        matchedSkills: candidate.scoreBreakdown?.matchedSkills || [],
+        missingSkills: candidate.scoreBreakdown?.missingSkills || [],
+
+        // 🤖 AI Insight
         aiMatchReason: candidate.aiMatchReason,
         summary: candidate.aiParsedJson?.summary || null,
         createdAt: candidate.createdAt,

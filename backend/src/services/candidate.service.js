@@ -71,6 +71,7 @@ const createCandidate = async (data) => {
         aiMatchReason: scoreData.reason,
         hybridScore,
         scoreBreakdown: {
+          // Hybrid score components (deterministic)
           skills: skillResult.score,
           semantic: semanticResult.score,
           experience: expScore,
@@ -78,6 +79,8 @@ const createCandidate = async (data) => {
           missingSkills: skillResult.missingSkills,
           requiredMinYears,
           candidateYears,
+          // LLM section scores (out of 40/35/25)
+          llmSectionScores: scoreData.sectionScores || null,
         },
         status: newStatus,
         aiUpdatedAt: new Date(),

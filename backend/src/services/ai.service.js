@@ -51,21 +51,51 @@ ${resumeText}
 // Resume -> Job Matching Score
 async function scoreResumeAgainstJob(resumeText, job) {
   const prompt = `
-You are an expert AI recruiter.
+You are a strict ATS (Applicant Tracking System) scoring engine.
+Score the resume against the job using the rubric below. Be accurate, not generous.
 
-Compare this resume with the job description.
+━━━ SCORING RUBRIC (Total 100 points) ━━━
 
+[A] SKILLS MATCH — 40 points
+  • For each required skill found clearly in the resume: award (40 / total required skills) points
+  • Partial credit (50%): close variant counts (e.g. "React.js" for "React")
+  • Zero credit: skill not mentioned anywhere
+  • If no required skills listed: award 20 points by default
+
+[B] PROFESSIONAL EXPERIENCE — 35 points
+  IMPORTANT DISTINCTION — projects ≠ professional experience:
+  • 35 pts: Has paid professional work experience directly relevant to this role
+  • 20 pts: Has internship experience relevant to this role
+  • 10 pts: Has ONLY personal/academic projects (no job or internship)
+  • 0 pts:  No relevant experience of any kind
+  Students with only projects must receive 10 pts MAX in this section.
+
+[C] JOB DESCRIPTION ALIGNMENT — 25 points
+  • 25 pts: Resume directly addresses most core responsibilities in the JD
+  • 15 pts: Resume partially addresses the JD responsibilities
+  • 5 pts:  Resume loosely aligns with the JD
+  • 0 pts:  No clear alignment
+
+━━━ STRICT RULES ━━━
+  • Do NOT reward soft skills, certifications, or education unless the JD specifically asks
+  • Do NOT treat side projects as professional experience — they are different categories
+  • Do NOT inflate scores. A student with great skills but 0 work experience should score 55-65, not 85+
+  • Calculate each section separately then sum for final score
+
+━━━ JOB DETAILS ━━━
 Job Title: ${job.title}
 Job Description: ${job.description}
 Required Skills: ${(job.requiredSkills || []).join(", ")}
 
-Resume:
+━━━ RESUME ━━━
 ${resumeText}
 
-Return ONLY JSON:
+━━━ OUTPUT ━━━
+Return ONLY this JSON (no markdown, no explanation outside JSON):
 {
-  "score": number (0-100),
-  "reason": "",
+  "score": <number 0-100, sum of A+B+C>,
+  "sectionScores": { "skills": <0-40>, "experience": <0-35>, "alignment": <0-25> },
+  "reason": "<2-3 sentences: what matched, what was missing, why this score>",
   "matchedSkills": [],
   "missingSkills": []
 }
