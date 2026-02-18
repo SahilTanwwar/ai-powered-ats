@@ -66,7 +66,7 @@ const Candidate = sequelize.define(
       allowNull: true,
     },
     status: {
-      type: DataTypes.ENUM("APPLIED", "SHORTLISTED", "REJECTED"),
+      type: DataTypes.ENUM("APPLIED", "SHORTLISTED", "REJECTED", "HIRED"),
       defaultValue: "APPLIED",
     },
   },

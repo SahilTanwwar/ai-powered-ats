@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const dashboardRoutes = require("./routes/dashboard.routes");
 
 const jobRoutes = require("./routes/Job");
 const candidateRoutes = require("./routes/candidate.routes");
@@ -16,6 +17,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use("/api/dashboard", dashboardRoutes);
 
 app.use("/uploads", express.static(path.resolve(__dirname, "../uploads")));
 

@@ -5,6 +5,8 @@ const {
 } = require("../services/candidate.service");
 
 const { validate: isUuid } = require("uuid");
+const Candidate = require("../models/candidate.model");
+
 
 
 // 🚀 Upload Candidate
@@ -81,6 +83,33 @@ const uploadCandidate = async (req, res) => {
     });
   }
 };
+const updateCandidateStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const allowedStatuses = ["APPLIED", "SHORTLISTED", "REJECTED", "HIRED"];
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({ message: "Invalid status value" });
+    }
+
+    const candidate = await Candidate.findByPk(id);
+
+    if (!candidate) {
+      return res.status(404).json({ message: "Candidate not found" });
+    }
+
+    candidate.status = status;
+    await candidate.save();
+
+    res.json({ message: "Status updated successfully", candidate });
+  } catch (error) {
+    console.error("Status update error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 
 
 // 📊 List Candidates (HYBRID Ranked + Clean)
@@ -175,4 +204,5 @@ module.exports = {
   uploadCandidate,
   listCandidates,
   getInterviewQuestions,
+  updateCandidateStatus,
 };

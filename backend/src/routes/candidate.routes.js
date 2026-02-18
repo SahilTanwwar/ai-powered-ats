@@ -1,12 +1,9 @@
 const express = require("express");
 const upload = require("../config/multer");
+const candidateController = require("../controllers/candidate.controller");
 
-const {
-  uploadCandidate,
-  listCandidates,
-  getInterviewQuestions,
-} = require("../controllers/candidate.controller");
-
+const { uploadCandidate, listCandidates, getInterviewQuestions } =
+  candidateController;
 const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
@@ -44,5 +41,12 @@ router.get(
   authMiddleware,
   getInterviewQuestions
 );
+
+/**
+ * Update Candidate Status
+ * PATCH /api/candidates/:id/status
+ * Protected
+ */
+router.patch("/:id/status", authMiddleware, candidateController.updateCandidateStatus);
 
 module.exports = router;
