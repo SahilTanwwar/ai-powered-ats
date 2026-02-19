@@ -1,190 +1,144 @@
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-  PieChart,
-  Pie,
-  Legend
-} from "recharts";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import api from "../api/api";
+import { useAuth } from "../auth/AuthContext";
+import AppLayout from "../layout/AppLayout";
+import { Card, Skeleton, Btn, Icon, PageWrap } from "../components/UI";
+import { T } from "../theme";
 
-import { useState } from "react";
+const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.07 } } };
+const fadeUp = { hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0, transition: { duration: 0.35 } } };
 
-const StatCard = ({ title, value, accent }) => (
-  <div
-    className={`rounded-2xl p-6 shadow-sm border ${
-      accent ? "bg-[#caff5a] border-transparent" : "bg-white border-gray-200"
-    }`}
-  >
-    <p className="text-sm text-gray-600">{title}</p>
-    <h3 className="mt-2 text-3xl font-bold text-gray-900">{value}</h3>
-  </div>
-);
-
-const Dashboard = () => {
-  const [period, setPeriod] = useState("Monthly");
-
-  // 📊 Chart Data
-  const dataSets = {
-    Weekly: [
-      { label: "Mon", value: 40 },
-      { label: "Tue", value: 65 },
-      { label: "Wed", value: 55 },
-      { label: "Thu", value: 80 },
-      { label: "Fri", value: 70 },
-    ],
-    Monthly: [
-      { label: "Jan", value: 120 },
-      { label: "Feb", value: 210 },
-      { label: "Mar", value: 180 },
-      { label: "Apr", value: 250 },
-      { label: "May", value: 300 },
-      { label: "Jun", value: 280 },
-    ],
-    Yearly: [
-      { label: "2021", value: 1200 },
-      { label: "2022", value: 1800 },
-      { label: "2023", value: 2400 },
-      { label: "2024", value: 3200 },
-    ],
-  };
-
-  const applicationData = dataSets[period];
-
-  // 📈 Dynamic Stats Data
-  const statsData = {
-    Weekly: {
-      applications: "310",
-      shortlisted: "120",
-      hired: "32",
-      rejected: "158",
-    },
-    Monthly: {
-      applications: "1,534",
-      shortlisted: "869",
-      hired: "236",
-      rejected: "429",
-    },
-    Yearly: {
-      applications: "8,600",
-      shortlisted: "4,300",
-      hired: "1,200",
-      rejected: "3,100",
-    },
-  };
-
-  const currentStats = statsData[period];
-
-  // 🥧 Pie Chart Data
-  const departmentData = [
-    { name: "Engineering", value: 400, fill: "#caff5a" },
-    { name: "Marketing", value: 250, fill: "#1f2937" },
-    { name: "Sales", value: 200, fill: "#9ca3af" },
-    { name: "HR", value: 150, fill: "#d1d5db" },
-  ];
-
-  const totalDepartments = departmentData.reduce(
-    (acc, item) => acc + item.value,
-    0
-  );
-
+function StatCard({ label, value, icon, color, sub, loading }) {
   return (
-    <div>
-      <h1 className="text-xl font-semibold text-gray-900 mb-6">
-        Dashboard
-      </h1>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-4 gap-6">
-        <StatCard title="Applications" value={currentStats.applications} accent />
-        <StatCard title="Shortlisted" value={currentStats.shortlisted} />
-        <StatCard title="Hired" value={currentStats.hired} />
-        <StatCard title="Rejected" value={currentStats.rejected} />
-      </div>
-
-      {/* Charts Section */}
-      <div className="grid grid-cols-3 gap-6 mt-8">
-        
-        {/* Applications Chart */}
-        <div className="col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-          
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">Applications</h3>
-
-            <div className="flex bg-gray-100 rounded-xl p-1">
-              {["Weekly", "Monthly", "Yearly"].map((item) => (
-                <button
-                  key={item}
-                  onClick={() => setPeriod(item)}
-                  className={`px-4 py-1.5 text-sm rounded-lg transition-all duration-200 ${
-                    period === item
-                      ? "bg-white shadow text-gray-900"
-                      : "text-gray-500 hover:text-gray-700"
-                  }`}
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={applicationData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="label" />
-                <YAxis />
-                <Tooltip />
-                <Bar
-                  dataKey="value"
-                  fill="#caff5a"
-                  radius={[8, 8, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
+    <motion.div variants={fadeUp}>
+      <Card style={{ padding: "22px 24px" }} hover>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+          <span style={{ fontSize: 12.5, fontWeight: 600, color: T.textMid }}>{label}</span>
+          <div style={{ width: 34, height: 34, borderRadius: 10, background: color + "18", display: "flex", alignItems: "center", justifyContent: "center", color }}>
+            {icon}
           </div>
         </div>
+        {loading
+          ? <Skeleton style={{ height: 36, width: 80, marginBottom: 8 }} />
+          : <div style={{ fontSize: 32, fontWeight: 800, color: T.text, letterSpacing: -1, lineHeight: 1, marginBottom: 6 }}>{(value ?? 0).toLocaleString()}</div>
+        }
+        {sub && <div style={{ fontSize: 12, color: T.textLight, fontWeight: 500 }}>{sub}</div>}
+      </Card>
+    </motion.div>
+  );
+}
 
-        {/* Department Pie Chart */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-          <h3 className="text-lg font-semibold mb-4">
-            Application by Department
-          </h3>
-
-          <div className="relative h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={departmentData}
-                  dataKey="value"
-                  nameKey="name"
-                  outerRadius={90}
-                  innerRadius={50}
-                  paddingAngle={4}
-                />
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-
-            {/* Center Total */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-2xl font-bold text-gray-900">
-                {totalDepartments}
-              </span>
-              <span className="text-xs text-gray-500">
-                Total
-              </span>
-            </div>
-          </div>
-        </div>
-
-      </div>
+function ChartTip({ active, payload, label }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 10, padding: "10px 14px", boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}>
+      <div style={{ fontSize: 11, color: T.textLight, marginBottom: 6, fontWeight: 600 }}>{label}</div>
+      {payload.map(p => <div key={p.dataKey} style={{ fontSize: 13, fontWeight: 700, color: p.fill, marginBottom: 2 }}>{p.name}: {p.value}</div>)}
     </div>
   );
-};
+}
 
-export default Dashboard;
+export default function Dashboard() {
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    api.get("/dashboard").then(r => setStats(r.data)).catch(() => {}).finally(() => setLoading(false));
+  }, []);
+
+  const hiringPct = stats ? Math.round((stats.hiredCount / (stats.totalCandidates || 1)) * 100) : 0;
+  const barData = stats?.weeklyApplications || [];
+
+  return (
+    <AppLayout title="Dashboard">
+      <PageWrap>
+        <div style={{ marginBottom: 28 }}>
+          <h2 style={{ fontSize: 22, fontWeight: 800, color: T.text, letterSpacing: -0.6, marginBottom: 4 }}>
+            Good morning, {user?.email?.split("@")[0]}
+          </h2>
+          <p style={{ fontSize: 13.5, color: T.textLight }}>Here's your recruitment pipeline at a glance.</p>
+        </div>
+
+        <motion.div variants={stagger} initial="hidden" animate="show"
+          className="responsive-grid-4" style={{ marginBottom: 24 }}>
+          <StatCard label="Total Jobs" value={stats?.totalJobs} icon={<Icon.Briefcase />} color={T.indigo} sub="Active positions" loading={loading} />
+          <StatCard label="Candidates" value={stats?.totalCandidates} icon={<Icon.Users />} color="#f59e0b" sub="Across all jobs" loading={loading} />
+          <StatCard label="Hired" value={stats?.hiredCount} icon={<Icon.Check />} color={T.success} sub={`${hiringPct}% conversion`} loading={loading} />
+          <StatCard label="Shortlisted" value={stats?.shortlistedCount} icon={<Icon.Star />} color="#8b5cf6" sub="Awaiting review" loading={loading} />
+        </motion.div>
+
+        <div className="responsive-split" style={{ marginBottom: 24 }}>
+          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+            <Card style={{ padding: "22px 22px 14px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: T.text, marginBottom: 4 }}>Weekly Applications</div>
+                  <div style={{ display: "flex", gap: 14 }}>
+                    {[{ c: "#c7d2fe", l: "Applied" }, { c: T.lime, l: "Shortlisted" }].map(x => (
+                      <span key={x.l} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11.5, color: T.textLight, fontWeight: 600 }}>
+                        <span style={{ width: 9, height: 9, borderRadius: 2, background: x.c, display: "inline-block" }} />{x.l}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <ResponsiveContainer width="100%" height={190}>
+                <BarChart data={barData} barGap={4} barCategoryGap="35%">
+                  <CartesianGrid strokeDasharray="3 3" stroke={T.border} vertical={false} />
+                  <XAxis dataKey="day" tick={{ fontSize: 11, fill: T.textLight }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: T.textLight }} axisLine={false} tickLine={false} />
+                  <Tooltip content={<ChartTip />} cursor={{ fill: T.bg }} />
+                  <Bar dataKey="Applied" name="Applied" fill="#c7d2fe" radius={[5,5,0,0]} />
+                  <Bar dataKey="Shortlisted" name="Shortlisted" fill={T.lime} radius={[5,5,0,0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </Card>
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
+            <Card style={{ padding: "22px", height: "100%" }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: T.text, marginBottom: 4 }}>Hiring Funnel</div>
+              <div style={{ fontSize: 12, color: T.textLight, marginBottom: 20 }}>Pipeline overview</div>
+              {[
+                { label: "Applied",     val: stats?.totalCandidates || 0,                              color: T.indigo  },
+                { label: "Shortlisted", val: stats?.shortlistedCount || 0,                             color: "#8b5cf6" },
+                { label: "Hired",       val: stats?.hiredCount || 0,                                   color: T.success },
+                { label: "Rejected",    val: stats?.rejectedCount || 0,                                color: T.danger  },
+              ].map(({ label, val, color }) => {
+                const pct = stats?.totalCandidates ? Math.round((val / stats.totalCandidates) * 100) : 0;
+                return (
+                  <div key={label} style={{ marginBottom: 14 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+                      <span style={{ fontSize: 12.5, fontWeight: 600, color: T.textMid }}>{label}</span>
+                      <span style={{ fontSize: 12.5, fontWeight: 700, color }}>{val}</span>
+                    </div>
+                    <div style={{ height: 6, background: T.bg, borderRadius: 99, overflow: "hidden" }}>
+                      <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.8, delay: 0.5 }}
+                        style={{ height: "100%", background: color, borderRadius: 99 }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </Card>
+          </motion.div>
+        </div>
+
+        <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}>
+          <Card style={{ padding: "20px 24px" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: T.text, marginBottom: 14 }}>Quick Actions</div>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <Btn variant="primary" icon={<Icon.Plus />} onClick={() => navigate("/jobs")}>Post New Job</Btn>
+              <Btn variant="secondary" icon={<Icon.Upload />} onClick={() => navigate("/candidates")}>Upload Resume</Btn>
+              <Btn variant="secondary" icon={<Icon.Users />} onClick={() => navigate("/candidates")}>View Candidates</Btn>
+            </div>
+          </Card>
+        </motion.div>
+      </PageWrap>
+    </AppLayout>
+  );
+}

@@ -6,6 +6,19 @@ const {
 
 const { validate: isUuid } = require("uuid");
 const Candidate = require("../models/candidate.model");
+const Job = require("../models/job");
+
+const canAccessJob = (user, job) => {
+  if (user.role === "ADMIN") {
+    return true;
+  }
+
+  if (user.role === "RECRUITER") {
+    return Number(job.userId) === Number(user.id);
+  }
+
+  return false;
+};
 
 
 
@@ -31,6 +44,20 @@ const uploadCandidate = async (req, res) => {
     if (isNaN(parsedJobId)) {
       return res.status(400).json({
         message: "jobId must be a valid integer",
+      });
+    }
+
+    const job = await Job.findByPk(parsedJobId);
+
+    if (!job) {
+      return res.status(404).json({
+        message: "Job not found",
+      });
+    }
+
+    if (!canAccessJob(req.user, job)) {
+      return res.status(403).json({
+        message: "Forbidden",
       });
     }
 
@@ -100,6 +127,16 @@ const updateCandidateStatus = async (req, res) => {
       return res.status(404).json({ message: "Candidate not found" });
     }
 
+    const job = await Job.findByPk(candidate.jobId);
+
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    if (!canAccessJob(req.user, job)) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
     candidate.status = status;
     await candidate.save();
 
@@ -123,9 +160,23 @@ const listCandidates = async (req, res) => {
       });
     }
 
+    const job = await Job.findByPk(parsedJobId);
+
+    if (!job) {
+      return res.status(404).json({
+        message: "Job not found",
+      });
+    }
+
+    if (!canAccessJob(req.user, job)) {
+      return res.status(403).json({
+        message: "Forbidden",
+      });
+    }
+
     const candidates = await getCandidatesByJob(
       parsedJobId,
-      parseInt(req.user.id, 10)
+      req.user.role === "ADMIN" ? null : parseInt(req.user.id, 10)
     );
 
     return res.status(200).json({
@@ -182,7 +233,7 @@ const getInterviewQuestions = async (req, res) => {
 
     const questions = await generateCandidateInterviewQuestions(
       candidateId,
-      parseInt(req.user.id, 10)
+      req.user
     );
 
     return res.status(200).json({
@@ -193,7 +244,7 @@ const getInterviewQuestions = async (req, res) => {
   } catch (error) {
     console.error("Interview Questions Error:", error);
 
-    return res.status(500).json({
+    return res.status(error.statusCode || 500).json({
       message: error.message || "Internal Server Error",
     });
   }

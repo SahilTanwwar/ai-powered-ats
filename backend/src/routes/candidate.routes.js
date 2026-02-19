@@ -5,6 +5,7 @@ const candidateController = require("../controllers/candidate.controller");
 const { uploadCandidate, listCandidates, getInterviewQuestions } =
   candidateController;
 const authMiddleware = require("../middleware/authMiddleware");
+const { requireAnyRole } = require("../middleware/role.middleware");
 
 const router = express.Router();
 
@@ -16,6 +17,7 @@ const router = express.Router();
 router.post(
   "/upload",
   authMiddleware,
+  requireAnyRole(["ADMIN", "RECRUITER"]),
   upload.single("resume"),
   uploadCandidate
 );
@@ -28,6 +30,7 @@ router.post(
 router.get(
   "/job/:jobId",
   authMiddleware,
+  requireAnyRole(["ADMIN", "RECRUITER"]),
   listCandidates
 );
 
@@ -39,6 +42,7 @@ router.get(
 router.get(
   "/:candidateId/interview-questions",
   authMiddleware,
+  requireAnyRole(["ADMIN", "RECRUITER"]),
   getInterviewQuestions
 );
 
@@ -47,6 +51,11 @@ router.get(
  * PATCH /api/candidates/:id/status
  * Protected
  */
-router.patch("/:id/status", authMiddleware, candidateController.updateCandidateStatus);
+router.patch(
+  "/:id/status",
+  authMiddleware,
+  requireAnyRole(["ADMIN", "RECRUITER"]),
+  candidateController.updateCandidateStatus
+);
 
 module.exports = router;

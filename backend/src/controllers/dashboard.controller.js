@@ -1,92 +1,83 @@
-const { Op, fn, col, literal } = require("sequelize");
+const Job = require("../models/job");
 const Candidate = require("../models/candidate.model");
+const { Op } = require("sequelize");
 
-// =============================
-// 1️⃣ Summary Stats
-// =============================
-exports.getSummary = async (req, res) => {
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function toYmd(date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function formatDay(date) {
+  return date.toLocaleDateString("en-US", { weekday: "short" });
+}
+
+const getDashboardStats = async (req, res) => {
   try {
-    const total = await Candidate.count();
+    const jobFilter = {};
 
-    const shortlisted = await Candidate.count({
-      where: { status: "SHORTLISTED" },
-    });
-
-    const rejected = await Candidate.count({
-      where: { status: "REJECTED" },
-    });
-
-    res.json({
-      applications: total,
-      shortlisted,
-      rejected,
-      hired: 0, // Update if HIRED status added
-    });
-  } catch (error) {
-    console.error("Dashboard Summary Error:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
-// =============================
-// 2️⃣ Applications Chart
-// =============================
-exports.getApplicationsChart = async (req, res) => {
-  try {
-    const { period } = req.query;
-
-    let groupFormat;
-
-    if (period === "Weekly") {
-      groupFormat = "DAY";
-    } else if (period === "Yearly") {
-      groupFormat = "YEAR";
-    } else {
-      groupFormat = "MONTH";
+    if (req.user.role === "RECRUITER") {
+      jobFilter.userId = req.user.id;
     }
 
-    const data = await Candidate.findAll({
-      attributes: [
-        [fn("DATE_TRUNC", groupFormat, col("createdAt")), "date"],
-        [fn("COUNT", col("id")), "value"],
-      ],
-      group: [literal("date")],
-      order: [[literal("date"), "ASC"]],
+    const jobs = await Job.findAll({ where: jobFilter });
+    const jobIds = jobs.map((job) => job.id);
+
+    const candidateFilter = {};
+
+    if (req.user.role === "RECRUITER") {
+      candidateFilter.jobId = { [Op.in]: jobIds };
+    }
+
+    const totalJobs = jobs.length;
+
+    const [totalCandidates, hiredCount, shortlistedCount, rejectedCount] = await Promise.all([
+      Candidate.count({ where: candidateFilter }),
+      Candidate.count({ where: { ...candidateFilter, status: "HIRED" } }),
+      Candidate.count({ where: { ...candidateFilter, status: "SHORTLISTED" } }),
+      Candidate.count({ where: { ...candidateFilter, status: "REJECTED" } }),
+    ]);
+
+    const since = new Date(Date.now() - 6 * DAY_MS);
+
+    const weeklyRows = await Candidate.findAll({
+      where: { ...candidateFilter, createdAt: { [Op.gte]: since } },
+      attributes: ["createdAt", "status"],
+      raw: true,
     });
 
-    const formatted = data.map((item) => ({
-      label: item.get("date"),
-      value: parseInt(item.get("value")),
-    }));
+    const baseDays = Array.from({ length: 7 }).map((_, i) => {
+      const dt = new Date(since.getTime() + i * DAY_MS);
+      return {
+        key: toYmd(dt),
+        day: formatDay(dt),
+        Applied: 0,
+        Shortlisted: 0,
+      };
+    });
 
-    res.json(formatted);
-  } catch (error) {
-    console.error("Dashboard Chart Error:", error);
-    res.status(500).json({ message: "Server error" });
+    const byDay = Object.fromEntries(baseDays.map((d) => [d.key, d]));
+
+    for (const row of weeklyRows) {
+      const key = toYmd(new Date(row.createdAt));
+      if (!byDay[key]) continue;
+      byDay[key].Applied += 1;
+      if (row.status === "SHORTLISTED" || row.status === "HIRED") {
+        byDay[key].Shortlisted += 1;
+      }
+    }
+
+    return res.json({
+      totalJobs,
+      totalCandidates,
+      hiredCount,
+      shortlistedCount,
+      rejectedCount,
+      weeklyApplications: baseDays.map((d) => byDay[d.key]),
+    });
+  } catch (err) {
+    return res.status(500).json({ message: "Dashboard error" });
   }
 };
 
-// =============================
-// 3️⃣ Department Breakdown
-// =============================
-exports.getDepartments = async (req, res) => {
-  try {
-    const data = await Candidate.findAll({
-      attributes: [
-        "jobId",
-        [fn("COUNT", col("id")), "value"],
-      ],
-      group: ["jobId"],
-    });
-
-    const formatted = data.map((item) => ({
-      name: `Job ${item.jobId}`,
-      value: parseInt(item.get("value")),
-    }));
-
-    res.json(formatted);
-  } catch (error) {
-    console.error("Dashboard Department Error:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
+module.exports = { getDashboardStats };

@@ -101,8 +101,10 @@ const createCandidate = async (data) => {
 
 // Get Candidates By Job
 const getCandidatesByJob = async (jobId, recruiterId) => {
+  const where = recruiterId ? { jobId, recruiterId } : { jobId };
+
   return await Candidate.findAll({
-    where: { jobId, recruiterId },
+    where,
     order: [
       [Candidate.sequelize.literal('"hybridScore" IS NULL'), "ASC"],
       ["hybridScore", "DESC"],
@@ -112,19 +114,40 @@ const getCandidatesByJob = async (jobId, recruiterId) => {
 };
 
 // Generate Interview Questions
-const generateCandidateInterviewQuestions = async (candidateId, recruiterId) => {
+const generateCandidateInterviewQuestions = async (candidateId, user) => {
+  const where =
+    user?.role === "ADMIN"
+      ? { id: candidateId }
+      : { id: candidateId, recruiterId: Number(user?.id) };
+
   const candidate = await Candidate.findOne({
-    where: { id: candidateId, recruiterId },
+    where,
   });
 
   if (!candidate) {
-    throw new Error("Candidate not found");
+    const error = new Error("Candidate not found");
+    error.statusCode = 404;
+    throw error;
   }
 
   const job = await Job.findByPk(candidate.jobId);
 
   if (!job) {
-    throw new Error("Job not found");
+    const error = new Error("Job not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (user?.role === "RECRUITER" && Number(job.userId) !== Number(user.id)) {
+    const error = new Error("Forbidden");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  if (user?.role !== "ADMIN" && user?.role !== "RECRUITER") {
+    const error = new Error("Forbidden");
+    error.statusCode = 403;
+    throw error;
   }
 
   if (!candidate.extractedText) {

@@ -1,54 +1,32 @@
 const express = require("express");
 const authMiddleware = require("../middleware/authMiddleware");
-const Job = require("../models/job");
+const { requireAnyRole } = require("../middleware/role.middleware");
+const jobController = require("../controllers/job.controller");
 
 const router = express.Router();
 
 // CREATE JOB
-router.post("/", authMiddleware, async (req, res) => {
-  try {
-    const { title, description, requiredSkills, experienceRequired } = req.body;
+router.post(
+  "/",
+  authMiddleware,
+  requireAnyRole(["ADMIN", "RECRUITER"]),
+  jobController.createJob
+);
 
-    const job = await Job.create({
-      title,
-      description,
-      requiredSkills,
-      experienceRequired,
-      userId: req.user.id,
-    });
-
-    res.status(201).json(job);
-  } catch (error) {
-    res.status(500).json({ message: "Error creating job" });
-  }
-});
-
-// GET ALL JOBS (only for logged recruiter)
-router.get("/", authMiddleware, async (req, res) => {
-  try {
-    const jobs = await Job.findAll({
-      where: { userId: req.user.id },
-    });
-
-    res.json(jobs);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching jobs" });
-  }
-});
+// GET ALL JOBS
+router.get(
+  "/",
+  authMiddleware,
+  requireAnyRole(["ADMIN", "RECRUITER"]),
+  jobController.listJobs
+);
 
 // GET SINGLE JOB
-router.get("/:id", authMiddleware, async (req, res) => {
-  try {
-    const job = await Job.findOne({
-      where: { id: req.params.id, userId: req.user.id },
-    });
-
-    if (!job) return res.status(404).json({ message: "Job not found" });
-
-    res.json(job);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching job" });
-  }
-});
+router.get(
+  "/:id",
+  authMiddleware,
+  requireAnyRole(["ADMIN", "RECRUITER"]),
+  jobController.getJobById
+);
 
 module.exports = router;

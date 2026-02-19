@@ -1,9 +1,14 @@
 const express = require("express");
 const router = express.Router();
-const dashboardController = require("../controllers/dashboard.controller");
+const { getDashboardStats } = require("../controllers/dashboard.controller");
+const authMiddleware = require("../middleware/authMiddleware");
+const { requireAnyRole } = require("../middleware/role.middleware");
 
-router.get("/summary", dashboardController.getSummary);
-router.get("/applications", dashboardController.getApplicationsChart);
-router.get("/departments", dashboardController.getDepartments);
+router.get(
+  "/",
+  authMiddleware,
+  requireAnyRole(["ADMIN", "RECRUITER"]),
+  getDashboardStats
+);
 
 module.exports = router;
