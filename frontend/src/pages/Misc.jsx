@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+﻿import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "../auth/AuthContext";
 import AppLayout from "../layout/AppLayout";
@@ -57,7 +57,7 @@ export function Settings() {
               </div>
             ))}
             <div style={{ marginTop: 14, padding: "12px 14px", background: T.limeSoft, borderRadius: T.r10, fontSize: 12.5, color: "#3a4a0a", fontWeight: 500 }}>
-              ✨ Auto-shortlist candidates with score ≥ 80 · Auto-reject below 40
+              âœ¨ Auto-shortlist candidates with score â‰¥ 80 Â· Auto-reject below 40
             </div>
           </Card>
 

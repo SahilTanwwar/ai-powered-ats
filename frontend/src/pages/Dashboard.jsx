@@ -1,144 +1,199 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
-import api from "../api/api";
-import { useAuth } from "../auth/AuthContext";
-import AppLayout from "../layout/AppLayout";
-import { Card, Skeleton, Btn, Icon, PageWrap } from "../components/UI";
-import { T } from "../theme";
+import { Briefcase, Users, CheckCircle, Target, TrendingUp, ArrowRight } from "lucide-react";
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip,
+  ResponsiveContainer, CartesianGrid,
+} from "recharts";
+import Layout from "../components/layout/Layout";
+import StatCard from "../components/ui/StatCard";
+import Skeleton from "../components/ui/Skeleton";
+import { dashboard, jobs } from "../services/api";
+import { useAuth } from "../context/AuthContext";
 
-const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.07 } } };
-const fadeUp = { hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0, transition: { duration: 0.35 } } };
-
-function StatCard({ label, value, icon, color, sub, loading }) {
-  return (
-    <motion.div variants={fadeUp}>
-      <Card style={{ padding: "22px 24px" }} hover>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-          <span style={{ fontSize: 12.5, fontWeight: 600, color: T.textMid }}>{label}</span>
-          <div style={{ width: 34, height: 34, borderRadius: 10, background: color + "18", display: "flex", alignItems: "center", justifyContent: "center", color }}>
-            {icon}
-          </div>
-        </div>
-        {loading
-          ? <Skeleton style={{ height: 36, width: 80, marginBottom: 8 }} />
-          : <div style={{ fontSize: 32, fontWeight: 800, color: T.text, letterSpacing: -1, lineHeight: 1, marginBottom: 6 }}>{(value ?? 0).toLocaleString()}</div>
-        }
-        {sub && <div style={{ fontSize: 12, color: T.textLight, fontWeight: 500 }}>{sub}</div>}
-      </Card>
-    </motion.div>
-  );
+function greet(email) {
+  const h = new Date().getHours();
+  const name = email?.split("@")[0] || "there";
+  const time = h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
+  return `${time}, ${name}`;
 }
 
-function ChartTip({ active, payload, label }) {
+function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return (
-    <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 10, padding: "10px 14px", boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}>
-      <div style={{ fontSize: 11, color: T.textLight, marginBottom: 6, fontWeight: 600 }}>{label}</div>
-      {payload.map(p => <div key={p.dataKey} style={{ fontSize: 13, fontWeight: 700, color: p.fill, marginBottom: 2 }}>{p.name}: {p.value}</div>)}
+    <div className="card px-4 py-3 text-xs">
+      <p className="font-semibold text-slate-700 mb-2">{label}</p>
+      {payload.map((p) => (
+        <p key={p.dataKey} style={{ color: p.fill }} className="font-medium">
+          {p.name}: {p.value}
+        </p>
+      ))}
     </div>
   );
 }
 
+const PIPELINE_COLORS = {
+  Applied: "bg-blue-500",
+  Shortlisted: "bg-violet-500",
+  Hired: "bg-emerald-500",
+  Rejected: "bg-red-400",
+};
+
 export default function Dashboard() {
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [stats, setStats] = useState(null);
+  const [recentJobs, setRecentJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    api.get("/dashboard").then(r => setStats(r.data)).catch(() => {}).finally(() => setLoading(false));
+    Promise.all([dashboard.getStats(), jobs.getAll()])
+      .then(([statsRes, jobsRes]) => {
+        setStats(statsRes.data);
+        setRecentJobs((jobsRes.data || []).slice(0, 5));
+      })
+      .catch(() => setError("Failed to load dashboard data."))
+      .finally(() => setLoading(false));
   }, []);
 
-  const hiringPct = stats ? Math.round((stats.hiredCount / (stats.totalCandidates || 1)) * 100) : 0;
-  const barData = stats?.weeklyApplications || [];
+  const hiringPct = stats
+    ? Math.round((stats.hiredCount / (stats.totalCandidates || 1)) * 100)
+    : 0;
+
+  const pipelineData = stats
+    ? [
+        { label: "Applied", count: Math.max(0, stats.totalCandidates - stats.hiredCount - stats.shortlistedCount - stats.rejectedCount), max: stats.totalCandidates },
+        { label: "Shortlisted", count: stats.shortlistedCount, max: stats.totalCandidates },
+        { label: "Hired", count: stats.hiredCount, max: stats.totalCandidates },
+        { label: "Rejected", count: stats.rejectedCount, max: stats.totalCandidates },
+      ]
+    : [];
 
   return (
-    <AppLayout title="Dashboard">
-      <PageWrap>
-        <div style={{ marginBottom: 28 }}>
-          <h2 style={{ fontSize: 22, fontWeight: 800, color: T.text, letterSpacing: -0.6, marginBottom: 4 }}>
-            Good morning, {user?.email?.split("@")[0]}
-          </h2>
-          <p style={{ fontSize: 13.5, color: T.textLight }}>Here's your recruitment pipeline at a glance.</p>
+    <Layout title="Dashboard">
+      <div className="mb-6">
+        <h2 className="font-head font-bold text-2xl text-slate-900 tracking-tight mb-1">
+          {greet(user?.email)} 
+        </h2>
+        <p className="text-slate-500 text-sm">Here's your recruitment pipeline at a glance.</p>
+      </div>
+
+      {error && (
+        <div className="mb-5 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">{error}</div>
+      )}
+
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+        <StatCard label="Total Jobs"  value={stats?.totalJobs}        icon={Briefcase}   iconBg="bg-blue-100"    iconColor="text-blue-600"    trendLabel="Active positions"  loading={loading} />
+        <StatCard label="Candidates"  value={stats?.totalCandidates}  icon={Users}       iconBg="bg-violet-100"  iconColor="text-violet-600"  trendLabel="Across all jobs"   loading={loading} />
+        <StatCard label="Hired"       value={stats?.hiredCount}       icon={CheckCircle} iconBg="bg-emerald-100" iconColor="text-emerald-600" trendLabel={`${hiringPct}% conversion`} loading={loading} />
+        <StatCard label="Shortlisted" value={stats?.shortlistedCount} icon={Target}      iconBg="bg-amber-100"   iconColor="text-amber-600"   trendLabel="Awaiting review"   loading={loading} />
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5 mb-6">
+        <div className="card p-5 xl:col-span-2">
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h3 className="font-head font-semibold text-base text-slate-900">Weekly Applications</h3>
+              <p className="text-slate-400 text-xs mt-0.5">Last 7 days</p>
+            </div>
+            <TrendingUp size={18} className="text-slate-300" />
+          </div>
+          {loading ? (
+            <div className="skeleton h-44 rounded-lg" />
+          ) : (
+            <ResponsiveContainer width="100%" height={180}>
+              <BarChart data={stats?.weeklyApplications || []} barGap={4}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
+                <XAxis dataKey="day" tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: "#F8FAFC" }} />
+                <Bar dataKey="Applied"     fill="#3B82F6" radius={[4,4,0,0]} name="Applied" />
+                <Bar dataKey="Shortlisted" fill="#8B5CF6" radius={[4,4,0,0]} name="Shortlisted" />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
 
-        <motion.div variants={stagger} initial="hidden" animate="show"
-          className="responsive-grid-4" style={{ marginBottom: 24 }}>
-          <StatCard label="Total Jobs" value={stats?.totalJobs} icon={<Icon.Briefcase />} color={T.indigo} sub="Active positions" loading={loading} />
-          <StatCard label="Candidates" value={stats?.totalCandidates} icon={<Icon.Users />} color="#f59e0b" sub="Across all jobs" loading={loading} />
-          <StatCard label="Hired" value={stats?.hiredCount} icon={<Icon.Check />} color={T.success} sub={`${hiringPct}% conversion`} loading={loading} />
-          <StatCard label="Shortlisted" value={stats?.shortlistedCount} icon={<Icon.Star />} color="#8b5cf6" sub="Awaiting review" loading={loading} />
-        </motion.div>
-
-        <div className="responsive-split" style={{ marginBottom: 24 }}>
-          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-            <Card style={{ padding: "22px 22px 14px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: T.text, marginBottom: 4 }}>Weekly Applications</div>
-                  <div style={{ display: "flex", gap: 14 }}>
-                    {[{ c: "#c7d2fe", l: "Applied" }, { c: T.lime, l: "Shortlisted" }].map(x => (
-                      <span key={x.l} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11.5, color: T.textLight, fontWeight: 600 }}>
-                        <span style={{ width: 9, height: 9, borderRadius: 2, background: x.c, display: "inline-block" }} />{x.l}
-                      </span>
-                    ))}
+        <div className="card p-5">
+          <h3 className="font-head font-semibold text-base text-slate-900 mb-5">Hiring Pipeline</h3>
+          {loading ? (
+            <div className="flex flex-col gap-3">{[...Array(4)].map((_,i) => <div key={i} className="skeleton h-10 rounded-lg" />)}</div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {pipelineData.map(({ label, count, max }) => (
+                <div key={label}>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-xs font-medium text-slate-600">{label}</span>
+                    <span className="font-mono text-xs font-bold text-slate-700">{count}</span>
+                  </div>
+                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full transition-all ${PIPELINE_COLORS[label] || "bg-slate-400"}`}
+                      style={{ width: max > 0 ? `${Math.round((count / max) * 100)}%` : "0%" }} />
                   </div>
                 </div>
-              </div>
-              <ResponsiveContainer width="100%" height={190}>
-                <BarChart data={barData} barGap={4} barCategoryGap="35%">
-                  <CartesianGrid strokeDasharray="3 3" stroke={T.border} vertical={false} />
-                  <XAxis dataKey="day" tick={{ fontSize: 11, fill: T.textLight }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: T.textLight }} axisLine={false} tickLine={false} />
-                  <Tooltip content={<ChartTip />} cursor={{ fill: T.bg }} />
-                  <Bar dataKey="Applied" name="Applied" fill="#c7d2fe" radius={[5,5,0,0]} />
-                  <Bar dataKey="Shortlisted" name="Shortlisted" fill={T.lime} radius={[5,5,0,0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </Card>
-          </motion.div>
-
-          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
-            <Card style={{ padding: "22px", height: "100%" }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: T.text, marginBottom: 4 }}>Hiring Funnel</div>
-              <div style={{ fontSize: 12, color: T.textLight, marginBottom: 20 }}>Pipeline overview</div>
-              {[
-                { label: "Applied",     val: stats?.totalCandidates || 0,                              color: T.indigo  },
-                { label: "Shortlisted", val: stats?.shortlistedCount || 0,                             color: "#8b5cf6" },
-                { label: "Hired",       val: stats?.hiredCount || 0,                                   color: T.success },
-                { label: "Rejected",    val: stats?.rejectedCount || 0,                                color: T.danger  },
-              ].map(({ label, val, color }) => {
-                const pct = stats?.totalCandidates ? Math.round((val / stats.totalCandidates) * 100) : 0;
-                return (
-                  <div key={label} style={{ marginBottom: 14 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-                      <span style={{ fontSize: 12.5, fontWeight: 600, color: T.textMid }}>{label}</span>
-                      <span style={{ fontSize: 12.5, fontWeight: 700, color }}>{val}</span>
-                    </div>
-                    <div style={{ height: 6, background: T.bg, borderRadius: 99, overflow: "hidden" }}>
-                      <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.8, delay: 0.5 }}
-                        style={{ height: "100%", background: color, borderRadius: 99 }} />
-                    </div>
-                  </div>
-                );
-              })}
-            </Card>
-          </motion.div>
-        </div>
-
-        <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}>
-          <Card style={{ padding: "20px 24px" }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: T.text, marginBottom: 14 }}>Quick Actions</div>
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <Btn variant="primary" icon={<Icon.Plus />} onClick={() => navigate("/jobs")}>Post New Job</Btn>
-              <Btn variant="secondary" icon={<Icon.Upload />} onClick={() => navigate("/candidates")}>Upload Resume</Btn>
-              <Btn variant="secondary" icon={<Icon.Users />} onClick={() => navigate("/candidates")}>View Candidates</Btn>
+              ))}
             </div>
-          </Card>
-        </motion.div>
-      </PageWrap>
-    </AppLayout>
+          )}
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+          <h3 className="font-head font-semibold text-base text-slate-900">Recent Jobs</h3>
+          <button onClick={() => navigate("/jobs")}
+            className="flex items-center gap-1.5 text-xs text-blue-600 font-semibold hover:text-blue-700">
+            View all <ArrowRight size={13} />
+          </button>
+        </div>
+        <div className="overflow-x-auto">
+          {loading ? (
+            <table><tbody>{[...Array(4)].map((_,i) => <Skeleton.Row key={i} cols={4} />)}</tbody></table>
+          ) : recentJobs.length === 0 ? (
+            <div className="py-12 text-center text-slate-400 text-sm">
+              No jobs posted yet.{" "}
+              <button onClick={() => navigate("/jobs")} className="text-blue-600 font-medium hover:underline">
+                Create your first job
+              </button>
+            </div>
+          ) : (
+            <table>
+              <thead>
+                <tr>
+                  <th className="text-left">Job Title</th>
+                  <th className="text-left">Experience</th>
+                  <th className="text-left">Skills</th>
+                  <th className="text-left">Posted</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentJobs.map((job) => (
+                  <tr key={job.id} onClick={() => navigate(`/jobs/${job.id}`)} className="cursor-pointer">
+                    <td>
+                      <div className="font-semibold text-slate-900">{job.title}</div>
+                      <div className="text-xs text-slate-400 mt-0.5 line-clamp-1">{job.description}</div>
+                    </td>
+                    <td><span className="text-slate-600">{job.experienceRequired || "—"}</span></td>
+                    <td>
+                      <div className="flex flex-wrap gap-1">
+                        {(job.requiredSkills || []).slice(0, 3).map((s) => (
+                          <span key={s} className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full text-xs font-medium">{s}</span>
+                        ))}
+                        {(job.requiredSkills || []).length > 3 && (
+                          <span className="text-xs text-slate-400">+{job.requiredSkills.length - 3}</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="text-slate-500 text-xs">
+                      {new Date(job.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+    </Layout>
   );
 }

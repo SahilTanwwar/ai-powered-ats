@@ -19,9 +19,13 @@ const {
 const createCandidate = async (data) => {
   const { filePath, jobId, recruiterId } = data;
 
-  const job = await Job.findOne({
-    where: { id: jobId, userId: recruiterId },
-  });
+  // ADMINs can access any job; RECRUITERs can only access their own
+  const whereClause =
+    data.role === "ADMIN"
+      ? { id: jobId }
+      : { id: jobId, userId: recruiterId };
+
+  const job = await Job.findOne({ where: whereClause });
 
   if (!job) {
     const error = new Error("Job not found");
@@ -47,23 +51,31 @@ const createCandidate = async (data) => {
 
       const requiredMinYears = parseRequiredYears(job.experienceRequired || "");
       const candidateYears = Number(parsedJson.totalExperienceYears || 0);
-
       const expScore = computeExperienceScore(candidateYears, requiredMinYears);
-      const semanticResult = await semanticMatchScore(extractedText, job);
 
-      const WEIGHTS = { skills: 0.5, semantic: 0.3, experience: 0.2 };
+      // Run semantic embedding + AI rubric scoring in parallel for speed
+      const [semanticResult, scoreData] = await Promise.all([
+        semanticMatchScore(extractedText, job),
+        scoreResumeAgainstJob(extractedText, job),
+      ]);
 
-      const hybridScore = Math.round(
-        skillResult.score * WEIGHTS.skills
-          + semanticResult.score * WEIGHTS.semantic
-          + expScore * WEIGHTS.experience
-      );
+      // Hybrid formula:
+      //  45% AI rubric score  (LLM evaluates skills + experience + JD alignment)
+      //  30% keyword skill match (deterministic, fast)
+      //  15% semantic similarity (embedding cosine)
+      //  10% experience years   (years vs required)
+      const WEIGHTS = { ai: 0.45, skills: 0.30, semantic: 0.15, experience: 0.10 };
+
+      const hybridScore = Math.min(100, Math.round(
+        (scoreData.score   || 0) * WEIGHTS.ai
+        + skillResult.score      * WEIGHTS.skills
+        + semanticResult.score   * WEIGHTS.semantic
+        + expScore               * WEIGHTS.experience
+      ));
 
       let newStatus = "APPLIED";
-      if (hybridScore >= 80) newStatus = "SHORTLISTED";
-      else if (hybridScore < 40) newStatus = "REJECTED";
-
-      const scoreData = await scoreResumeAgainstJob(extractedText, job);
+      if (hybridScore >= 75) newStatus = "SHORTLISTED";
+      else if (hybridScore < 35) newStatus = "REJECTED";
 
       await candidate.update({
         aiParsedJson: parsedJson,

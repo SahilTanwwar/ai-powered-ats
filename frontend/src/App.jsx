@@ -1,67 +1,65 @@
-import { Suspense, lazy, useEffect, useRef } from "react";
-import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import { AuthProvider, useAuth } from "./auth/AuthContext";
-import { useToast } from "./context/ToastContext";
+﻿import { Suspense, lazy } from "react";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 
-const ProtectedRoute = lazy(() => import("./auth/ProtectedRoute"));
-const Login = lazy(() => import("./pages/Auth").then((m) => ({ default: m.Login })));
-const Register = lazy(() => import("./pages/Auth").then((m) => ({ default: m.Register })));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const Jobs = lazy(() => import("./pages/Jobs"));
-const JobDetails = lazy(() => import("./pages/JobDetails"));
-const Candidates = lazy(() => import("./pages/Candidates"));
-const CandidateDetails = lazy(() => import("./pages/CandidateDetails"));
-const Settings = lazy(() => import("./pages/Misc").then((m) => ({ default: m.Settings })));
-const NotFound = lazy(() => import("./pages/Misc").then((m) => ({ default: m.NotFound })));
+const Login          = lazy(() => import("./pages/Login"));
+const Register       = lazy(() => import("./pages/Register"));
+const Dashboard      = lazy(() => import("./pages/Dashboard"));
+const Jobs           = lazy(() => import("./pages/Jobs"));
+const JobDetail       = lazy(() => import("./pages/JobDetail"));
+const CandidateDetail = lazy(() => import("./pages/CandidateDetail"));
+const Candidates      = lazy(() => import("./pages/Candidates"));
+const Settings        = lazy(() => import("./pages/Settings"));
 
-function RouteFallback() {
+function LoadingScreen() {
   return (
-    <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "var(--bg)" }}>
-      <div className="spinner" aria-label="Loading" />
+    <div className="min-h-screen bg-bg flex items-center justify-center">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-10 h-10 border-4 border-accent/20 border-t-accent rounded-full animate-spin" />
+        <span className="text-sm text-secondary font-medium">Loading...</span>
+      </div>
     </div>
   );
 }
 
-function SessionWatcher() {
-  const { isAuthed } = useAuth();
-  const { info } = useToast();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const prevAuthed = useRef(isAuthed);
+function PrivateRoute({ children }) {
+  const { isAuthenticated, loading } = useAuth();
+  if (loading) return <LoadingScreen />;
+  return isAuthenticated ? children : <Navigate to="/login" replace />;
+}
 
-  useEffect(() => {
-    const dropped = prevAuthed.current && !isAuthed;
-    if (dropped && location.pathname !== "/login") {
-      info("Session expired. Please sign in again.");
-      navigate("/login", { replace: true });
-    }
-    prevAuthed.current = isAuthed;
-  }, [info, isAuthed, location.pathname, navigate]);
-
-  return null;
+function PublicRoute({ children }) {
+  const { isAuthenticated, loading } = useAuth();
+  if (loading) return <LoadingScreen />;
+  return isAuthenticated ? <Navigate to="/dashboard" replace /> : children;
 }
 
 function AppRoutes() {
   return (
-    <>
-      <SessionWatcher />
-      <Suspense fallback={<RouteFallback />}>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route element={<ProtectedRoute />}>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/jobs" element={<Jobs />} />
-            <Route path="/jobs/:id" element={<JobDetails />} />
-            <Route path="/candidates" element={<Candidates />} />
-            <Route path="/candidates/:id" element={<CandidateDetails />} />
-            <Route path="/settings" element={<Settings />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Suspense>
-    </>
+    <Suspense fallback={<LoadingScreen />}>
+      <Routes>
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/login"    element={<PublicRoute><Login /></PublicRoute>} />
+        <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+        <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+        <Route path="/jobs"      element={<PrivateRoute><Jobs /></PrivateRoute>} />
+        <Route path="/jobs/:id"  element={<PrivateRoute><JobDetail /></PrivateRoute>} />
+        <Route path="/jobs/:jobId/candidates/:candidateId" element={<PrivateRoute><CandidateDetail /></PrivateRoute>} />
+        <Route path="/candidates" element={<PrivateRoute><Candidates /></PrivateRoute>} />
+        <Route path="/settings"   element={<PrivateRoute><Settings /></PrivateRoute>} />
+        <Route path="*" element={
+          <div className="min-h-screen bg-bg flex items-center justify-center">
+            <div className="text-center">
+              <h1 className="font-head text-6xl font-bold text-accent mb-2">404</h1>
+              <p className="text-secondary text-lg mb-6">Page not found</p>
+              <a href="/dashboard" className="inline-flex items-center gap-2 px-5 py-2.5 bg-accent text-white rounded-lg text-sm font-semibold hover:bg-blue-700">
+                Go to Dashboard
+              </a>
+            </div>
+          </div>
+        } />
+      </Routes>
+    </Suspense>
   );
 }
 

@@ -5,6 +5,8 @@ const User = require("../models/User");
 
 const router = express.Router();
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 router.post("/register", async (req, res) => {
   try {
     const { email, password } = req.body || {};
@@ -12,6 +14,7 @@ router.post("/register", async (req, res) => {
     if (
       typeof email !== "string" ||
       !email.trim() ||
+      !EMAIL_RE.test(email.trim()) ||
       typeof password !== "string" ||
       password.length < 6
     ) {
@@ -55,12 +58,12 @@ router.post("/login", async (req, res) => {
 
     const user = await User.findOne({ where: { email: email.trim() } });
     if (!user) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
     const token = jwt.sign(

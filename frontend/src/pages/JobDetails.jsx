@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import api from "../api/api";
@@ -13,6 +13,7 @@ export default function JobDetails() {
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     Promise.all([api.get(`/jobs/${id}`), api.get(`/candidates/job/${id}`)])
@@ -22,6 +23,21 @@ export default function JobDetails() {
   }, [id]);
 
   if (loading) return <AppLayout title="Job Details"><div style={{ display: "flex", flexDirection: "column", gap: 14 }}><Skeleton style={{ height: 140 }} /><Skeleton style={{ height: 300 }} /></div></AppLayout>;
+
+  const deleteJob = async () => {
+    if (!job) return;
+    const ok = window.confirm(`Delete job "${job.title}" and all linked candidates? This cannot be undone.`);
+    if (!ok) return;
+    setDeleting(true);
+    try {
+      await api.delete(`/jobs/${job.id}`);
+      navigate("/jobs", { replace: true });
+    } catch (e) {
+      setErr(e?.response?.data?.message || "Failed to delete job.");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <AppLayout title={job?.title || "Job Details"}>
@@ -64,11 +80,14 @@ export default function JobDetails() {
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
           <h3 style={{ fontSize: 15, fontWeight: 800, color: T.text }}>Candidates ({candidates.length})</h3>
-          <Btn variant="secondary" icon={<Icon.Plus />} onClick={() => navigate("/candidates")}>Upload Candidate</Btn>
+          <div style={{ display: "flex", gap: 8 }}>
+            <Btn variant="danger" loading={deleting} onClick={deleteJob}>Delete Job</Btn>
+            <Btn variant="secondary" icon={<Icon.Plus />} onClick={() => navigate("/candidates")}>Upload Candidate</Btn>
+          </div>
         </div>
 
         {candidates.length === 0 ? (
-          <Card><EmptyState icon="👤" title="No candidates yet" sub="Upload resumes for this job to start AI screening." action={<Btn variant="primary" onClick={() => navigate("/candidates")}>Upload Resume</Btn>} /></Card>
+          <Card><EmptyState icon="ðŸ‘¤" title="No candidates yet" sub="Upload resumes for this job to start AI screening." action={<Btn variant="primary" onClick={() => navigate("/candidates")}>Upload Resume</Btn>} /></Card>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {candidates.map((c, i) => (

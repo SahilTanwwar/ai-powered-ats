@@ -28,7 +28,13 @@ const startServer = async () => {
 
   } catch (error) {
     console.error("Server startup error:", error);
+    process.exit(1);
   }
 };
+
+if (!process.env.JWT_SECRET) {
+  console.error("❌ FATAL: JWT_SECRET environment variable is not set.");
+  process.exit(1);
+}
 
 startServer();

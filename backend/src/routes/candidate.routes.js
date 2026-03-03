@@ -58,4 +58,16 @@ router.patch(
   candidateController.updateCandidateStatus
 );
 
+/**
+ * Delete Candidate
+ * DELETE /api/candidates/:id
+ * Protected
+ */
+router.delete(
+  "/:id",
+  authMiddleware,
+  requireAnyRole(["ADMIN", "RECRUITER"]),
+  candidateController.deleteCandidate
+);
+
 module.exports = router;

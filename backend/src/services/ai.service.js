@@ -23,6 +23,19 @@ async function parseResumeToJson(resumeText) {
 Extract structured information from this resume.
 Return ONLY valid JSON. No explanation.
 
+IMPORTANT for skills:
+- Include BOTH the abbreviated form AND the full form when known
+  e.g. if resume says "Machine Learning" also include "ML"
+  e.g. if resume says "Large Language Models" also include "LLM"
+  e.g. if resume says "Natural Language Processing" also include "NLP"
+  e.g. if resume says "Artificial Intelligence" also include "AI"
+  e.g. if resume says "JavaScript" also include "JS"
+  e.g. if resume says "TypeScript" also include "TS"
+  e.g. if resume says "Node.js" also include "Node"
+  e.g. if resume says "React.js" also include "React"
+- Include framework/library names exactly as commonly used (React, not "React.js Frontend Library")
+- List every technical skill, tool, language, and framework mentioned
+
 Format:
 {
   "name": "",
@@ -181,7 +194,11 @@ async function semanticMatchScore(resumeText, job) {
   ]);
 
   const sim = cosineSimilarity(resumeVec, jobVec);
-  const score = Math.max(0, Math.min(100, Math.round(sim * 100)));
+  // Normalize: Gemini embeddings for unrelated texts typically sit around 0.3–0.5.
+  // Map [0.3, 1.0] → [0, 100] so loosely related docs score ~20–35 and
+  // well-matched docs (sim ~0.75–0.9) score 65–85.
+  const normalized = Math.max(0, (sim - 0.3) / 0.7);
+  const score = Math.min(100, Math.round(normalized * 100));
 
   return { similarity: sim, score };
 }

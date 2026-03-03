@@ -7,6 +7,8 @@ const {
 const { validate: isUuid } = require("uuid");
 const Candidate = require("../models/candidate.model");
 const Job = require("../models/job");
+const fs = require("fs/promises");
+const path = require("path");
 
 const canAccessJob = (user, job) => {
   if (user.role === "ADMIN") {
@@ -18,6 +20,18 @@ const canAccessJob = (user, job) => {
   }
 
   return false;
+};
+
+const safeDeleteResume = async (filePath) => {
+  if (!filePath) return;
+  const absolute = path.isAbsolute(filePath)
+    ? filePath
+    : path.resolve(__dirname, "../../", filePath);
+  try {
+    await fs.unlink(absolute);
+  } catch {
+    // Ignore missing files while deleting candidate.
+  }
 };
 
 
@@ -67,6 +81,7 @@ const uploadCandidate = async (req, res) => {
       phone,
       jobId: parsedJobId,
       recruiterId: parseInt(req.user.id, 10),
+      role: req.user.role,
       resumePath: req.file.path,
       filePath: req.file.path,
     });
@@ -250,10 +265,43 @@ const getInterviewQuestions = async (req, res) => {
   }
 };
 
+const deleteCandidate = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!isUuid(id)) {
+      return res.status(400).json({ message: "Invalid candidate id format" });
+    }
+
+    const candidate = await Candidate.findByPk(id);
+    if (!candidate) {
+      return res.status(404).json({ message: "Candidate not found" });
+    }
+
+    const job = await Job.findByPk(candidate.jobId);
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    if (!canAccessJob(req.user, job)) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    await safeDeleteResume(candidate.resumePath);
+    await candidate.destroy();
+
+    return res.status(200).json({ message: "Candidate deleted successfully" });
+  } catch (error) {
+    console.error("Delete candidate error:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
 
 module.exports = {
   uploadCandidate,
   listCandidates,
   getInterviewQuestions,
   updateCandidateStatus,
+  deleteCandidate,
 };

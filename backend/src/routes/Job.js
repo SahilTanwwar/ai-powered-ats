@@ -29,4 +29,12 @@ router.get(
   jobController.getJobById
 );
 
+// DELETE JOB
+router.delete(
+  "/:id",
+  authMiddleware,
+  requireAnyRole(["ADMIN", "RECRUITER"]),
+  jobController.deleteJob
+);
+
 module.exports = router;

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "../api/api";
@@ -18,7 +18,7 @@ function SkillTag({ skill, type }) {
       border: `1px solid ${matched ? T.success : T.danger}30`,
       display: "inline-flex", alignItems: "center", gap: 4,
     }}>
-      {matched ? "✓" : "✗"} {skill}
+      {matched ? "âœ“" : "âœ—"} {skill}
     </span>
   );
 }
@@ -42,9 +42,10 @@ export default function CandidateDetails() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    // We need to find the candidate — fetch from job listing
+    // We need to find the candidate â€” fetch from job listing
     // Since there's no GET /candidates/:id endpoint, we use the jobId from state or re-fetch
     // For now, pull from all jobs and find the candidate
     const load = async () => {
@@ -79,6 +80,20 @@ export default function CandidateDetails() {
       setQuestions(res.data?.questions || []);
     } catch (e) { setErr("Failed to generate questions."); }
     finally { setLoadingQ(false); }
+  };
+
+  const deleteCandidate = async () => {
+    const ok = window.confirm(`Delete candidate "${candidate?.name}" and attached resume? This cannot be undone.`);
+    if (!ok) return;
+    setDeleting(true);
+    try {
+      await api.delete(`/candidates/${id}`);
+      navigate("/candidates", { replace: true });
+    } catch (e) {
+      setErr(e?.response?.data?.message || "Failed to delete candidate.");
+    } finally {
+      setDeleting(false);
+    }
   };
 
   if (loading) return (
@@ -138,11 +153,12 @@ export default function CandidateDetails() {
             {STATUSES.filter(s => s !== candidate.status).map(s => (
               <Btn key={s} size="sm" variant="secondary" loading={updatingStatus} onClick={() => updateStatus(s)}>{s}</Btn>
             ))}
+            <Btn size="sm" variant="danger" loading={deleting} onClick={deleteCandidate}>Delete Candidate</Btn>
           </div>
         </Card>
 
         {/* Score Breakdown */}
-        <Section title="📊 AI Score Breakdown">
+        <Section title="ðŸ“Š AI Score Breakdown">
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14, marginBottom: 16 }}>
             {[
               { label: "Skills Match", val: bd.skills ?? 0, color: T.indigo },
@@ -164,7 +180,7 @@ export default function CandidateDetails() {
 
         {/* Skills */}
         {((bd.matchedSkills?.length > 0) || (bd.missingSkills?.length > 0)) && (
-          <Section title="🎯 Skills Analysis">
+          <Section title="ðŸŽ¯ Skills Analysis">
             {bd.matchedSkills?.length > 0 && (
               <div style={{ marginBottom: 14 }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: T.textMid, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.4 }}>Matched Skills</div>
@@ -186,13 +202,13 @@ export default function CandidateDetails() {
 
         {/* AI Summary */}
         {candidate.aiParsedJson?.summary && (
-          <Section title="📝 Candidate Summary">
+          <Section title="ðŸ“ Candidate Summary">
             <p style={{ fontSize: 13.5, color: T.textMid, lineHeight: 1.7 }}>{candidate.aiParsedJson.summary}</p>
           </Section>
         )}
 
         {/* Interview Questions */}
-        <Section title="🎤 Interview Questions">
+        <Section title="ðŸŽ¤ Interview Questions">
           {questions.length === 0 ? (
             <div style={{ textAlign: "center", padding: "10px 0 6px" }}>
               <p style={{ fontSize: 13.5, color: T.textLight, marginBottom: 16 }}>Generate AI-powered interview questions tailored to this candidate.</p>
