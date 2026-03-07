@@ -5,9 +5,12 @@ const dashboardRoutes = require("./routes/dashboard.routes");
 
 const jobRoutes = require("./routes/Job");
 const candidateRoutes = require("./routes/candidate.routes");
+const interviewRoutes = require("./routes/interview.routes");
+const auditLogRoutes = require("./routes/auditLog.routes");
 const authRoutes = require("./routes/auth");
 const protectedRoutes = require("./routes/protected");
 const healthRoutes = require("./routes/health");
+const usersRoutes = require("./routes/users.routes");
 
 const { apiLimiter, authLimiter } = require("./middleware/rateLimiter");
 const { errorHandler, notFoundHandler } = require("./middleware/errorHandler");
@@ -41,6 +44,9 @@ app.use("/api/health", healthRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/candidates", candidateRoutes);
+app.use("/api/interviews", interviewRoutes);
+app.use("/api/audit-logs", auditLogRoutes);
+app.use("/api/users", usersRoutes);
 app.use("/api", protectedRoutes);
 
 app.use(notFoundHandler);

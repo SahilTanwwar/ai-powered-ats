@@ -10,7 +10,11 @@ import Badge from "../components/ui/Badge";
 import Skeleton from "../components/ui/Skeleton";
 import ScoreRing from "../components/ui/ScoreRing";
 import SkillTag from "../components/ui/SkillTag";
-import { jobs, candidates } from "../services/api";
+import ActivityTimeline from "../components/ui/ActivityTimeline";
+import TeamNotes from "../components/ui/TeamNotes";
+import ScheduledInterviews from "../components/ui/ScheduledInterviews";
+import CandidateTags from "../components/ui/CandidateTags";
+import { jobs, candidates, auditLogs } from "../services/api";
 
 //  Score row bar 
 function ScoreBar({ label, value, color = "bg-blue-500" }) {
@@ -29,30 +33,82 @@ function ScoreBar({ label, value, color = "bg-blue-500" }) {
 }
 
 export default function CandidateDetail() {
-  const { jobId, candidateId } = useParams();
+  // Handles both /jobs/:jobId/candidates/:candidateId AND /candidates/:id
+  const params = useParams();
+  const jobId = params.jobId;
+  const candidateId = params.candidateId || params.id;
   const navigate = useNavigate();
 
-  const [job,       setJob]       = useState(null);
-  const [cand,      setCand]      = useState(null);
-  const [loading,   setLoading]   = useState(true);
-  const [error,     setError]     = useState("");
+  const [job, setJob] = useState(null);
+  const [cand, setCand] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [questions, setQuestions] = useState([]);
-  const [qLoading,  setQLoading]  = useState(false);
-  const [status,    setStatus]    = useState("");
+  const [qLoading, setQLoading] = useState(false);
+  const [status, setStatus] = useState("");
+  const [activities, setActivities] = useState([]);
+  const [activitiesLoading, setActivitiesLoading] = useState(false);
 
   useEffect(() => {
-    Promise.all([jobs.getById(jobId), candidates.getByJob(jobId)])
-      .then(([j, c]) => {
-        setJob(j.data);
-        const list = c.data?.data || c.data || [];
-        const found = list.find((x) => String(x.id) === String(candidateId));
-        if (!found) { setError("Candidate not found."); return; }
-        setCand(found);
-        setStatus(found.status);
-      })
-      .catch((e) => setError(e?.response?.data?.message || "Failed to load."))
-      .finally(() => setLoading(false));
+    async function loadData() {
+      try {
+        setLoading(true);
+        if (jobId) {
+          // Standard route: /jobs/:jobId/candidates/:candidateId
+          const [j, c] = await Promise.all([jobs.getById(jobId), candidates.getByJob(jobId)]);
+          setJob(j.data);
+          const list = c.data?.data || c.data || [];
+          const found = list.find((x) => String(x.id) === String(candidateId));
+          if (!found) { setError("Candidate not found."); return; }
+          setCand(found);
+          setStatus(found.status);
+        } else {
+          // Direct route from Global Search: /candidates/:id
+          // We use search to find the candidate's basic info
+          const res = await candidates.search(candidateId);
+          const results = res.data?.data || [];
+          // Try to find by exact ID match
+          const found = results.find((c) => c.id === candidateId);
+          if (!found) {
+            // If search doesn't find it (it searches by name/email text), just use placeholder
+            // The candidate detail page will show limited info
+            setCand({ id: candidateId, name: "Candidate", email: "", status: "APPLIED", tags: [] });
+            setStatus("APPLIED");
+          } else {
+            setCand({ id: found.id, name: found.name, email: found.email, status: found.status, tags: found.tags || [], atsScore: found.atsScore, breakdown: {}, scoreBreakdown: {} });
+            setStatus(found.status);
+            // Look up job info if we have jobId from the candidate
+            if (found.jobId) {
+              try {
+                const jobRes = await jobs.getById(found.jobId);
+                setJob(jobRes.data);
+              } catch (e) { /* ignore */ }
+            }
+          }
+        }
+      } catch (e) {
+        setError(e?.response?.data?.message || "Failed to load candidate.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
   }, [jobId, candidateId]);
+
+  // Fetch activity history
+  useEffect(() => {
+    if (!candidateId) return;
+    setActivitiesLoading(true);
+    auditLogs.getByCandidate(candidateId)
+      .then((res) => {
+        setActivities(res.data?.data || []);
+      })
+      .catch((e) => {
+        console.error("Failed to fetch activities:", e);
+        setActivities([]);
+      })
+      .finally(() => setActivitiesLoading(false));
+  }, [candidateId]);
 
   const handleStatusChange = async (e) => {
     const newStatus = e.target.value;
@@ -61,6 +117,12 @@ export default function CandidateDetail() {
       await candidates.updateStatus(candidateId, newStatus);
       setCand((prev) => ({ ...prev, status: newStatus }));
       toast.success("Status updated.");
+      // Refresh activities to show status change
+      setTimeout(() => {
+        auditLogs.getByCandidate(candidateId)
+          .then((res) => setActivities(res.data?.data || []))
+          .catch((e) => console.error("Failed to refresh activities:", e));
+      }, 500);
     } catch {
       toast.error("Failed to update status.");
     }
@@ -104,10 +166,10 @@ export default function CandidateDetail() {
 
   const bd = cand.breakdown || cand.scoreBreakdown || {};
   const hybrid = cand.atsScore ?? cand.hybridScore ?? 0;
-  const matched  = bd.matchedSkills  || [];
-  const missing  = bd.missingSkills  || [];
+  const matched = bd.matchedSkills || [];
+  const missing = bd.missingSkills || [];
   const reqSkills = job?.requiredSkills || [];
-  const neutral  = reqSkills.filter((s) => !matched.includes(s) && !missing.includes(s));
+  const neutral = reqSkills.filter((s) => !matched.includes(s) && !missing.includes(s));
 
   const colorClass = hybrid >= 80 ? "bg-emerald-500" : hybrid >= 60 ? "bg-amber-400" : "bg-red-400";
 
@@ -154,12 +216,15 @@ export default function CandidateDetail() {
             <div className="card p-5">
               <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Skills</h4>
               <div className="flex flex-wrap gap-1.5">
-                {matched.map ((s) => <SkillTag key={s} label={s} type="matched" />)}
-                {missing.map ((s) => <SkillTag key={s} label={s} type="missing" />)}
-                {neutral.map ((s) => <SkillTag key={s} label={s} type="neutral" />)}
+                {matched.map((s) => <SkillTag key={s} label={s} type="matched" />)}
+                {missing.map((s) => <SkillTag key={s} label={s} type="missing" />)}
+                {neutral.map((s) => <SkillTag key={s} label={s} type="neutral" />)}
               </div>
             </div>
           )}
+
+          {/* Custom Tags */}
+          <CandidateTags candidateId={candidateId} initialTags={cand.tags || []} />
 
           {/* Experience / Education */}
           {(cand.experience || cand.education) && (
@@ -178,6 +243,9 @@ export default function CandidateDetail() {
               )}
             </div>
           )}
+
+          {/* --- NEW: Team Collaboration Notes --- */}
+          <TeamNotes candidateId={candidateId} />
         </div>
 
         {/*  Main panel  */}
@@ -231,13 +299,22 @@ export default function CandidateDetail() {
             )}
           </div>
 
+          {/* --- NEW: Interview Scheduling --- */}
+          <ScheduledInterviews candidateId={candidateId} jobId={jobId} />
+
+          {/* Activity Timeline card */}
+          <div className="card p-6">
+            <h3 className="font-head font-semibold text-slate-900 mb-4">Activity History</h3>
+            <ActivityTimeline activities={activities} loading={activitiesLoading} />
+          </div>
+
           {/* Score breakdown card */}
           <div className="card p-6">
             <h3 className="font-head font-semibold text-slate-900 mb-4">Score Breakdown</h3>
             <div className="flex flex-col gap-4">
-              <ScoreBar label="Skills Match"    value={bd.skills    ?? 0} color="bg-blue-500" />
-              <ScoreBar label="Semantic Fit"    value={bd.semantic  ?? 0} color="bg-indigo-400" />
-              <ScoreBar label="Experience"      value={bd.experience ?? 0} color="bg-emerald-500" />
+              <ScoreBar label="Skills Match" value={bd.skills ?? 0} color="bg-blue-500" />
+              <ScoreBar label="Semantic Fit" value={bd.semantic ?? 0} color="bg-indigo-400" />
+              <ScoreBar label="Experience" value={bd.experience ?? 0} color="bg-emerald-500" />
             </div>
           </div>
 

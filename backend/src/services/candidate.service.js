@@ -1,6 +1,7 @@
 const { extractResumeText } = require("../utils/resumeTextExtractor");
 const Candidate = require("../models/candidate.model");
 const Job = require("../models/job.js");
+const { Op } = require("sequelize");
 
 const {
   parseResumeToJson,
@@ -112,8 +113,29 @@ const createCandidate = async (data) => {
 };
 
 // Get Candidates By Job
-const getCandidatesByJob = async (jobId, recruiterId) => {
+const getCandidatesByJob = async (jobId, recruiterId, filters = {}) => {
   const where = recruiterId ? { jobId, recruiterId } : { jobId };
+
+  // Advanced filters
+  if (filters.status && filters.status.length > 0) {
+    where.status = { [Op.in]: filters.status.split(",") };
+  }
+
+  if (filters.minScore) {
+    where.hybridScore = { [Op.gte]: parseFloat(filters.minScore) };
+  }
+
+  if (filters.maxScore) {
+    where.hybridScore = where.hybridScore || {};
+    where.hybridScore[Op.lte] = parseFloat(filters.maxScore);
+  }
+
+  if (filters.search) {
+    where[Op.or] = [
+      { name: { [Op.iLike]: `%${filters.search}%` } },
+      { email: { [Op.iLike]: `%${filters.search}%` } },
+    ];
+  }
 
   return await Candidate.findAll({
     where,

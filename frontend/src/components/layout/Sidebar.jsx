@@ -2,16 +2,20 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Briefcase, Users, Settings,
-  LogOut, ChevronLeft, Menu, Zap,
+  LogOut, ChevronLeft, Menu, Zap, ShieldCheck,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
 
-const NAV = [
+const BASE_NAV = [
   { to: "/dashboard", label: "Dashboard", Icon: LayoutDashboard },
-  { to: "/jobs",      label: "Jobs",      Icon: Briefcase },
+  { to: "/jobs", label: "Jobs", Icon: Briefcase },
   { to: "/candidates", label: "Candidates", Icon: Users },
-  { to: "/settings",  label: "Settings",  Icon: Settings },
+  { to: "/settings", label: "Settings", Icon: Settings },
+];
+
+const ADMIN_NAV = [
+  { to: "/manage-recruiters", label: "Manage Recruiters", Icon: ShieldCheck },
 ];
 
 function NavItem({ to, label, Icon, collapsed, onClick }) {
@@ -19,10 +23,10 @@ function NavItem({ to, label, Icon, collapsed, onClick }) {
     <NavLink to={to} onClick={onClick} className="block">
       {({ isActive }) => (
         <div
-          className={`flex items-center px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-150 group
+          className={`flex items-center px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-200 group
             ${isActive
-              ? "bg-blue-50 text-blue-600 font-semibold"
-              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+              ? "bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100/50 text-indigo-700 shadow-sm font-semibold"
+              : "text-slate-600 hover:bg-white/50 hover:text-slate-900"
             }`}
           title={collapsed ? label : undefined}
         >
@@ -44,6 +48,9 @@ export default function Sidebar({ collapsed, onToggle }) {
   const navigate = useNavigate();
   const [confirmLogout, setConfirmLogout] = useState(false);
 
+  const isAdmin = user?.role === "ADMIN";
+  const NAV = isAdmin ? [...BASE_NAV, ...ADMIN_NAV] : BASE_NAV;
+
   const handleLogoutClick = () => setConfirmLogout(true);
 
   const handleLogoutConfirm = () => {
@@ -60,7 +67,7 @@ export default function Sidebar({ collapsed, onToggle }) {
 
   return (
     <aside
-      className={`fixed left-0 top-0 h-full bg-white border-r border-slate-200 flex flex-col z-30 transition-all duration-200
+      className={`fixed left-0 top-0 h-full bg-white/60 backdrop-blur-xl border-r border-white/40 flex flex-col z-30 transition-all duration-300 shadow-[4px_0_24px_rgba(0,0,0,0.02)]
         ${collapsed ? "w-16" : "w-60"}`}
     >
       {/* Logo */}
@@ -96,9 +103,24 @@ export default function Sidebar({ collapsed, onToggle }) {
             Main Menu
           </span>
         )}
-        {NAV.map((item) => (
+        {BASE_NAV.map((item) => (
           <NavItem key={item.to} {...item} collapsed={collapsed} />
         ))}
+
+        {/* Admin-only section */}
+        {isAdmin && (
+          <>
+            {!collapsed && (
+              <span className="px-3 mt-4 mb-2 text-[10px] font-bold text-purple-400 uppercase tracking-widest">
+                Admin
+              </span>
+            )}
+            {ADMIN_NAV.map((item) => (
+              <NavItem key={item.to} {...item} collapsed={collapsed} />
+            ))}
+          </>
+        )}
+
       </nav>
 
       {/* Logout confirmation overlay */}
@@ -138,7 +160,7 @@ export default function Sidebar({ collapsed, onToggle }) {
               <div className="text-xs font-semibold text-slate-900 truncate">
                 {user?.email?.split("@")[0]}
               </div>
-              <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wide">
+              <div className={`text-[10px] font-bold uppercase tracking-wide ${isAdmin ? "text-purple-500" : "text-slate-400"}`}>
                 {user?.role}
               </div>
             </div>

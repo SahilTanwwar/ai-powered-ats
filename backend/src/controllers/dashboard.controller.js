@@ -1,5 +1,6 @@
 const Job = require("../models/job");
 const Candidate = require("../models/candidate.model");
+const AuditLog = require("../models/auditLog.model");
 const { Op } = require("sequelize");
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -67,6 +68,32 @@ const getDashboardStats = async (req, res) => {
       }
     }
 
+    // --- NEW: Action Required (Candidates stuck for > 5 days) ---
+    const fiveDaysAgo = new Date(Date.now() - 5 * DAY_MS);
+    const actionRequired = await Candidate.findAll({
+      where: {
+        ...candidateFilter,
+        status: { [Op.in]: ["APPLIED", "SHORTLISTED"] },
+        updatedAt: { [Op.lte]: fiveDaysAgo },
+      },
+      attributes: ["id", "name", "status", "updatedAt"],
+      include: [{ model: Job, as: "Job", attributes: ["title"] }],
+      order: [["updatedAt", "ASC"]],
+      limit: 10,
+    });
+
+    // --- NEW: Recent Activity (Audit logs) ---
+    const activityQuery = {};
+    if (req.user.role === "RECRUITER") {
+      // For recruiter, show logs where they are the actor, or logs related to their jobs/candidates
+      activityQuery.userId = req.user.id;
+    }
+    const recentActivity = await AuditLog.findAll({
+      where: activityQuery,
+      order: [["createdAt", "DESC"]],
+      limit: 15,
+    });
+
     return res.json({
       totalJobs,
       totalCandidates,
@@ -74,6 +101,8 @@ const getDashboardStats = async (req, res) => {
       shortlistedCount,
       rejectedCount,
       weeklyApplications: baseDays.map((d) => byDay[d.key]),
+      actionRequired,
+      recentActivity,
     });
   } catch (err) {
     return res.status(500).json({ message: "Dashboard error" });

@@ -37,7 +37,7 @@ export default function Candidates() {
         );
         setCandCounts(counts);
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false));
   }, []);
 
@@ -70,15 +70,15 @@ export default function Candidates() {
             const c = candCounts[job.id];
             return (
               <button key={job.id} onClick={() => navigate(`/jobs/${job.id}`)}
-                className="card p-5 text-left hover:shadow-md hover:border-blue-200 transition-all group">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center shrink-0">
-                    <Briefcase size={18} className="text-blue-500" />
+                className="glass-card p-5 text-left hover:shadow-glow hover:-translate-y-1 transition-all group flex flex-col">
+                <div className="flex items-start justify-between mb-4 w-full">
+                  <div className="w-10 h-10 bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100/50 shadow-sm rounded-xl flex items-center justify-center shrink-0">
+                    <Briefcase size={18} className="text-indigo-500" />
                   </div>
                   <Badge variant={job.status} label={job.status} />
                 </div>
-                <h3 className="font-head font-semibold text-slate-900 mb-1 group-hover:text-blue-600 transition-colors">{job.title}</h3>
-                <p className="text-slate-400 text-xs mb-4 line-clamp-2">{job.description}</p>
+                <h3 className="font-head font-semibold text-slate-900 mb-1 group-hover:text-indigo-600 transition-colors w-full">{job.title}</h3>
+                <p className="text-slate-500 text-xs mb-4 line-clamp-2 w-full">{job.description}</p>
                 <div className="grid grid-cols-3 gap-2 pt-4 border-t border-slate-100">
                   <div className="text-center">
                     <div className="font-mono font-bold text-lg text-slate-900">{c?.total ?? "—"}</div>

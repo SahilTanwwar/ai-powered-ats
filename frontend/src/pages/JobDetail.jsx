@@ -3,13 +3,15 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useDropzone } from "react-dropzone";
 import {
   ChevronLeft, Upload, Trash2, X, CloudUpload,
-  CheckCircle2, Loader2, User, AlertCircle,
+  CheckCircle2, Loader2, User, AlertCircle, Layout as LayoutIcon, Columns, Check, CheckSquare, Square,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import Layout from "../components/layout/Layout";
 import Badge from "../components/ui/Badge";
 import Skeleton from "../components/ui/Skeleton";
+import KanbanBoard from "../components/ui/KanbanBoard";
 import { jobs, candidates } from "../services/api";
+import { useAuth } from "../context/AuthContext";
 
 const TABS = ["All", "APPLIED", "SHORTLISTED", "HIRED", "REJECTED"];
 
@@ -18,8 +20,8 @@ function ScoreBadge({ score }) {
   if (score == null) return <span className="font-mono text-xs text-slate-400">—</span>;
   const cls =
     score >= 80 ? "bg-emerald-50 text-emerald-700" :
-    score >= 60 ? "bg-amber-50 text-amber-700" :
-                  "bg-red-50 text-red-500";
+      score >= 60 ? "bg-amber-50 text-amber-700" :
+        "bg-red-50 text-red-500";
   return (
     <span className={`font-mono text-sm font-bold px-2.5 py-1 rounded-lg ${cls}`}>{score}</span>
   );
@@ -52,10 +54,10 @@ function UploadModal({ job, onClose, onUploaded }) {
 
     const fd = new FormData();
     fd.append("resume", file);
-    fd.append("name",   form.name.trim());
-    fd.append("email",  form.email.trim());
-    fd.append("phone",  form.phone.trim());
-    fd.append("jobId",  String(job.id));
+    fd.append("name", form.name.trim());
+    fd.append("email", form.email.trim());
+    fd.append("phone", form.phone.trim());
+    fd.append("jobId", String(job.id));
 
     try {
       const res = await candidates.uploadResume(fd);
@@ -174,13 +176,19 @@ function UploadModal({ job, onClose, onUploaded }) {
 export default function JobDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [job,        setJob]        = useState(null);
-  const [candList,   setCandList]   = useState([]);
-  const [loading,    setLoading]    = useState(true);
-  const [error,      setError]      = useState("");
-  const [activeTab,  setActiveTab]  = useState("All");
+  const [job, setJob] = useState(null);
+  const [candList, setCandList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState("All");
+  const [viewMode, setViewMode] = useState("table"); // "table" or "kanban"
   const [showUpload, setShowUpload] = useState(false);
   const [updatingId, setUpdatingId] = useState(null);
+  const [selected, setSelected] = useState(new Set()); // Bulk selection
+  const [bulkAction, setBulkAction] = useState(null); // "STATUS" or "DELETE"
+
+  const { user } = useAuth();
+  const isAdmin = user?.role === "ADMIN";
 
   useEffect(() => {
     Promise.all([jobs.getById(id), candidates.getByJob(id)])
@@ -220,6 +228,67 @@ export default function JobDetail() {
       toast.success("Candidate deleted.");
     } catch {
       toast.error("Failed to delete candidate.");
+    }
+  };
+
+  // Bulk actions
+  const toggleSelect = (candId) => {
+    const newSelected = new Set(selected);
+    if (newSelected.has(candId)) {
+      newSelected.delete(candId);
+    } else {
+      newSelected.add(candId);
+    }
+    setSelected(newSelected);
+  };
+
+  const toggleSelectAll = () => {
+    if (selected.size === filtered.length && filtered.length > 0) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(filtered.map((c) => c.id)));
+    }
+  };
+
+  const bulkUpdateStatus = async (status) => {
+    if (!window.confirm(`Update ${selected.size} candidate(s) to ${status}?`)) return;
+    setUpdatingId("bulk");
+    try {
+      await Promise.all(
+        Array.from(selected).map((candId) =>
+          candidates.updateStatus(candId, status)
+        )
+      );
+      setCandList((prev) =>
+        prev.map((c) => (selected.has(c.id) ? { ...c, status } : c))
+      );
+      setSelected(new Set());
+      toast.success(`${selected.size} candidate(s) updated.`);
+    } catch {
+      toast.error("Failed to update some candidates.");
+    } finally {
+      setUpdatingId(null);
+      setBulkAction(null);
+    }
+  };
+
+  const bulkDelete = async () => {
+    if (!window.confirm(`Delete ${selected.size} candidate(s)? This cannot be undone.`)) return;
+    setUpdatingId("bulk");
+    try {
+      await Promise.all(
+        Array.from(selected).map((candId) =>
+          candidates.deleteCandidate(candId)
+        )
+      );
+      setCandList((prev) => prev.filter((c) => !selected.has(c.id)));
+      setSelected(new Set());
+      toast.success(`${selected.size} candidate(s) deleted.`);
+    } catch {
+      toast.error("Failed to delete some candidates.");
+    } finally {
+      setUpdatingId(null);
+      setBulkAction(null);
     }
   };
 
@@ -279,111 +348,219 @@ export default function JobDetail() {
         </div>
       )}
 
-      {/* Tabs */}
-      <div className="flex gap-1 bg-slate-100 p-1 rounded-xl w-fit mb-5">
-        {TABS.map((tab) => (
-          <button key={tab} onClick={() => setActiveTab(tab)}
-            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5
-              ${activeTab === tab ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>
-            {tab}
-            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${activeTab === tab ? "bg-blue-100 text-blue-700" : "bg-slate-200 text-slate-500"}`}>
-              {tabCount(tab)}
-            </span>
+      {/* Tabs and View Toggle */}
+      <div className="flex items-center justify-between gap-4 mb-5">
+        <div className="flex gap-1 bg-slate-100 p-1 rounded-xl w-fit">
+          {TABS.map((tab) => (
+            <button key={tab} onClick={() => setActiveTab(tab)}
+              className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5
+                ${activeTab === tab ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>
+              {tab}
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${activeTab === tab ? "bg-blue-100 text-blue-700" : "bg-slate-200 text-slate-500"}`}>
+                {tabCount(tab)}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* View toggle */}
+        <div className="flex gap-1 bg-slate-100 p-1 rounded-xl">
+          <button
+            onClick={() => setViewMode("table")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5
+              ${viewMode === "table" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+            title="Table view">
+            <LayoutIcon size={14} />
           </button>
-        ))}
+          <button
+            onClick={() => setViewMode("kanban")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5
+              ${viewMode === "kanban" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+            title="Kanban board">
+            <Columns size={14} />
+          </button>
+        </div>
       </div>
 
-      {/* Candidate table */}
-      <div className="card overflow-hidden">
-        {filtered.length === 0 ? (
-          <div className="py-14 text-center">
-            <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-              <User size={22} className="text-slate-300" />
-            </div>
-            <p className="text-slate-500 text-sm font-medium">No candidates in this category</p>
-            <button onClick={() => setShowUpload(true)} className="mt-3 text-xs text-blue-600 font-semibold hover:underline">
-              Upload the first resume
+      {/* Bulk Action Toolbar */}
+      {selected.size > 0 && (
+        <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold text-blue-900">{selected.size} selected</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <select
+              onChange={(e) => {
+                if (e.target.value) bulkUpdateStatus(e.target.value);
+                e.target.value = "";
+              }}
+              className="text-xs border border-blue-300 bg-white text-blue-900 rounded-lg px-2.5 py-1.5 font-medium hover:bg-blue-100 focus:outline-none"
+            >
+              <option value="">Change Status...</option>
+              <option value="APPLIED">Applied</option>
+              <option value="SHORTLISTED">Shortlisted</option>
+              <option value="HIRED">Hired</option>
+              <option value="REJECTED">Rejected</option>
+            </select>
+            {isAdmin && (
+              <button
+                onClick={bulkDelete}
+                disabled={updatingId === "bulk"}
+                className="px-3 py-1.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white rounded-lg text-xs font-semibold flex items-center gap-2 transition-all"
+              >
+                {updatingId === "bulk" ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+                Delete
+              </button>
+            )}
+            <button
+              onClick={() => setSelected(new Set())}
+              className="px-3 py-1.5 bg-white hover:bg-slate-100 text-blue-900 rounded-lg text-xs font-semibold"
+            >
+              Clear
             </button>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table>
-              <thead>
-                <tr>
-                  <th className="text-left w-8">Rank</th>
-                  <th className="text-left">Candidate</th>
-                  <th className="text-left">ATS Score</th>
-                  <th className="text-left">Skills Match</th>
-                  <th className="text-left">Status</th>
-                  <th className="text-left">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((cand, i) => {
-                  const skillsPct = cand.breakdown?.skills ?? cand.scoreBreakdown?.skills ?? 0;
-                  const medal = i === 0 ? "" : i === 1 ? "" : i === 2 ? "" : null;
-                  const initials = (cand.name || "?").slice(0, 2).toUpperCase();
-                  return (
-                    <tr key={cand.id}>
-                      <td>
-                        <span className="font-mono text-xs text-slate-500 font-bold">
-                          {medal || `#${i + 1}`}
-                        </span>
-                      </td>
-                      <td>
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-white text-[11px] font-bold shrink-0">
-                            {initials}
+        </div>
+      )}
+
+      {/* Candidate view - Table or Kanban */}
+      {viewMode === "kanban" ? (
+        // Kanban board
+        <div className="card p-4 overflow-x-auto">
+          {filtered.length === 0 ? (
+            <div className="py-14 text-center">
+              <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <User size={22} className="text-slate-300" />
+              </div>
+              <p className="text-slate-500 text-sm font-medium">No candidates in this category</p>
+            </div>
+          ) : (
+            <KanbanBoard
+              candidates={filtered}
+              onStatusChange={updateStatus}
+              onCandidateClick={(cand) => navigate(`/jobs/${id}/candidates/${cand.id}`)}
+            />
+          )}
+        </div>
+      ) : (
+        // Table view
+        <div className="card overflow-hidden">
+          {filtered.length === 0 ? (
+            <div className="py-14 text-center">
+              <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <User size={22} className="text-slate-300" />
+              </div>
+              <p className="text-slate-500 text-sm font-medium">No candidates in this category</p>
+              <button onClick={() => setShowUpload(true)} className="mt-3 text-xs text-blue-600 font-semibold hover:underline">
+                Upload the first resume
+              </button>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table>
+                <thead>
+                  <tr>
+                    <th className="text-left w-8">
+                      <button
+                        onClick={toggleSelectAll}
+                        className="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-slate-600"
+                        title={selected.size === filtered.length && filtered.length > 0 ? "Deselect all" : "Select all"}
+                      >
+                        {selected.size === filtered.length && filtered.length > 0 ? (
+                          <CheckSquare size={16} className="text-blue-600" />
+                        ) : (
+                          <Square size={16} />
+                        )}
+                      </button>
+                    </th>
+                    <th className="text-left w-8">Rank</th>
+                    <th className="text-left">Candidate</th>
+                    <th className="text-left">ATS Score</th>
+                    <th className="text-left">Skills Match</th>
+                    <th className="text-left">Status</th>
+                    <th className="text-left">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((cand, i) => {
+                    const skillsPct = cand.breakdown?.skills ?? cand.scoreBreakdown?.skills ?? 0;
+                    const medal = i === 0 ? "" : i === 1 ? "" : i === 2 ? "" : null;
+                    const initials = (cand.name || "?").slice(0, 2).toUpperCase();
+                    return (
+                      <tr key={cand.id} className={selected.has(cand.id) ? "bg-blue-50" : ""}>
+                        <td>
+                          <button
+                            onClick={() => toggleSelect(cand.id)}
+                            className="p-1 hover:bg-slate-200 rounded text-slate-400 hover:text-slate-600"
+                          >
+                            {selected.has(cand.id) ? (
+                              <CheckSquare size={16} className="text-blue-600" />
+                            ) : (
+                              <Square size={16} />
+                            )}
+                          </button>
+                        </td>
+                        <td>
+                          <span className="font-mono text-xs text-slate-500 font-bold">
+                            {medal || `#${i + 1}`}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-white text-[11px] font-bold shrink-0">
+                              {initials}
+                            </div>
+                            <div>
+                              <button onClick={() => navigate(`/jobs/${id}/candidates/${cand.id}`)}
+                                className="font-semibold text-slate-900 hover:text-blue-600 transition-colors text-sm">
+                                {cand.name}
+                              </button>
+                              <div className="text-xs text-slate-400">{cand.email}</div>
+                            </div>
                           </div>
-                          <div>
+                        </td>
+                        <td><ScoreBadge score={cand.atsScore ?? cand.hybridScore} /></td>
+                        <td>
+                          <div className="flex items-center gap-2">
+                            <div className="h-1.5 w-20 bg-slate-100 rounded-full overflow-hidden">
+                              <div className={`h-full rounded-full ${skillsPct >= 80 ? "bg-emerald-500" : skillsPct >= 60 ? "bg-amber-400" : "bg-red-400"}`}
+                                style={{ width: `${skillsPct}%` }} />
+                            </div>
+                            <span className="text-xs text-slate-500 font-medium">{skillsPct}%</span>
+                          </div>
+                        </td>
+                        <td>
+                          <select value={cand.status} disabled={updatingId === cand.id}
+                            onChange={(e) => updateStatus(cand.id, e.target.value)}
+                            className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                            <option value="APPLIED">Applied</option>
+                            <option value="SHORTLISTED">Shortlisted</option>
+                            <option value="HIRED">Hired</option>
+                            <option value="REJECTED">Rejected</option>
+                          </select>
+                        </td>
+                        <td>
+                          <div className="flex items-center gap-1">
                             <button onClick={() => navigate(`/jobs/${id}/candidates/${cand.id}`)}
-                              className="font-semibold text-slate-900 hover:text-blue-600 transition-colors text-sm">
-                              {cand.name}
+                              className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-semibold hover:bg-blue-100 transition-all">
+                              View
                             </button>
-                            <div className="text-xs text-slate-400">{cand.email}</div>
+                            {isAdmin && (
+                              <button onClick={() => handleDelete(cand)}
+                                className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all">
+                                <Trash2 size={13} />
+                              </button>
+                            )}
                           </div>
-                        </div>
-                      </td>
-                      <td><ScoreBadge score={cand.atsScore ?? cand.hybridScore} /></td>
-                      <td>
-                        <div className="flex items-center gap-2">
-                          <div className="h-1.5 w-20 bg-slate-100 rounded-full overflow-hidden">
-                            <div className={`h-full rounded-full ${skillsPct >= 80 ? "bg-emerald-500" : skillsPct >= 60 ? "bg-amber-400" : "bg-red-400"}`}
-                              style={{ width: `${skillsPct}%` }} />
-                          </div>
-                          <span className="text-xs text-slate-500 font-medium">{skillsPct}%</span>
-                        </div>
-                      </td>
-                      <td>
-                        <select value={cand.status} disabled={updatingId === cand.id}
-                          onChange={(e) => updateStatus(cand.id, e.target.value)}
-                          className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
-                          <option value="APPLIED">Applied</option>
-                          <option value="SHORTLISTED">Shortlisted</option>
-                          <option value="HIRED">Hired</option>
-                          <option value="REJECTED">Rejected</option>
-                        </select>
-                      </td>
-                      <td>
-                        <div className="flex items-center gap-1">
-                          <button onClick={() => navigate(`/jobs/${id}/candidates/${cand.id}`)}
-                            className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-semibold hover:bg-blue-100 transition-all">
-                            View
-                          </button>
-                          <button onClick={() => handleDelete(cand)}
-                            className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all">
-                            <Trash2 size={13} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
 
       {showUpload && job && (
         <UploadModal

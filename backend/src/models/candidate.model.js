@@ -69,6 +69,11 @@ const Candidate = sequelize.define(
       type: DataTypes.ENUM("APPLIED", "SHORTLISTED", "REJECTED", "HIRED"),
       defaultValue: "APPLIED",
     },
+    tags: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      defaultValue: [],
+    },
   },
   {
     tableName: "candidates",

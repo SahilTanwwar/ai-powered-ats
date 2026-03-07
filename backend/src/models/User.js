@@ -11,6 +11,7 @@ const User = sequelize.define("User", {
     type: DataTypes.STRING,
     allowNull: false,
     unique: true,
+    required: true
   },
   password: {
     type: DataTypes.STRING,
@@ -20,6 +21,11 @@ const User = sequelize.define("User", {
     type: DataTypes.ENUM("ADMIN", "RECRUITER"),
     allowNull: false,
     defaultValue: "RECRUITER",
+  },
+  status: {
+    type: DataTypes.ENUM("PENDING", "ACTIVE", "BLOCKED"),
+    allowNull: false,
+    defaultValue: "PENDING",
   },
 }, {
   timestamps: true,

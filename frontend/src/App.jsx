@@ -1,15 +1,18 @@
 ﻿import { Suspense, lazy } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { ThemeProvider } from "./context/ThemeContext";
 
-const Login          = lazy(() => import("./pages/Login"));
-const Register       = lazy(() => import("./pages/Register"));
-const Dashboard      = lazy(() => import("./pages/Dashboard"));
-const Jobs           = lazy(() => import("./pages/Jobs"));
-const JobDetail       = lazy(() => import("./pages/JobDetail"));
+const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Jobs = lazy(() => import("./pages/Jobs"));
+const JobDetail = lazy(() => import("./pages/JobDetail"));
 const CandidateDetail = lazy(() => import("./pages/CandidateDetail"));
-const Candidates      = lazy(() => import("./pages/Candidates"));
-const Settings        = lazy(() => import("./pages/Settings"));
+const Candidates = lazy(() => import("./pages/Candidates"));
+const Settings = lazy(() => import("./pages/Settings"));
+const ManageRecruiters = lazy(() => import("./pages/ManageRecruiters"));
+const SearchResults = lazy(() => import("./pages/SearchResults"));
 
 function LoadingScreen() {
   return (
@@ -34,19 +37,30 @@ function PublicRoute({ children }) {
   return isAuthenticated ? <Navigate to="/dashboard" replace /> : children;
 }
 
+function AdminRoute({ children }) {
+  const { user, isAuthenticated, loading } = useAuth();
+  if (loading) return <LoadingScreen />;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (user?.role !== "ADMIN") return <Navigate to="/dashboard" replace />;
+  return children;
+}
+
 function AppRoutes() {
   return (
     <Suspense fallback={<LoadingScreen />}>
       <Routes>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/login"    element={<PublicRoute><Login /></PublicRoute>} />
+        <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
         <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
         <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-        <Route path="/jobs"      element={<PrivateRoute><Jobs /></PrivateRoute>} />
-        <Route path="/jobs/:id"  element={<PrivateRoute><JobDetail /></PrivateRoute>} />
+        <Route path="/jobs" element={<PrivateRoute><Jobs /></PrivateRoute>} />
+        <Route path="/jobs/:id" element={<PrivateRoute><JobDetail /></PrivateRoute>} />
         <Route path="/jobs/:jobId/candidates/:candidateId" element={<PrivateRoute><CandidateDetail /></PrivateRoute>} />
+        <Route path="/candidates/:id" element={<PrivateRoute><CandidateDetail /></PrivateRoute>} />
         <Route path="/candidates" element={<PrivateRoute><Candidates /></PrivateRoute>} />
-        <Route path="/settings"   element={<PrivateRoute><Settings /></PrivateRoute>} />
+        <Route path="/search" element={<PrivateRoute><SearchResults /></PrivateRoute>} />
+        <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
+        <Route path="/manage-recruiters" element={<AdminRoute><ManageRecruiters /></AdminRoute>} />
         <Route path="*" element={
           <div className="min-h-screen bg-bg flex items-center justify-center">
             <div className="text-center">
@@ -66,9 +80,11 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }

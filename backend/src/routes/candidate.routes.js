@@ -1,11 +1,12 @@
 const express = require("express");
 const upload = require("../config/multer");
 const candidateController = require("../controllers/candidate.controller");
+const candidateNoteController = require("../controllers/candidateNote.controller");
 
-const { uploadCandidate, listCandidates, getInterviewQuestions } =
+const { uploadCandidate, listCandidates, getInterviewQuestions, searchCandidates, addTag, removeTag } =
   candidateController;
 const authMiddleware = require("../middleware/authMiddleware");
-const { requireAnyRole } = require("../middleware/role.middleware");
+const { requireAnyRole, requireRole } = require("../middleware/role.middleware");
 
 const router = express.Router();
 
@@ -35,6 +36,18 @@ router.get(
 );
 
 /**
+ * 🔍 Global Candidate Search
+ * GET /api/candidates/search?q=query
+ * Protected
+ */
+router.get(
+  "/search",
+  authMiddleware,
+  requireAnyRole(["ADMIN", "RECRUITER"]),
+  searchCandidates
+);
+
+/**
  * 🎯 Generate Interview Questions for Candidate
  * GET /api/candidates/:candidateId/interview-questions
  * Protected
@@ -59,15 +72,54 @@ router.patch(
 );
 
 /**
- * Delete Candidate
+ * Delete Candidate — ADMIN only
  * DELETE /api/candidates/:id
  * Protected
  */
 router.delete(
   "/:id",
   authMiddleware,
-  requireAnyRole(["ADMIN", "RECRUITER"]),
+  requireRole("ADMIN"),
   candidateController.deleteCandidate
+);
+
+// --- CANDIDATE NOTES ROUTES ---
+
+router.get(
+  "/:candidateId/notes",
+  authMiddleware,
+  requireAnyRole(["ADMIN", "RECRUITER"]),
+  candidateNoteController.getNotes
+);
+
+router.post(
+  "/:candidateId/notes",
+  authMiddleware,
+  requireAnyRole(["ADMIN", "RECRUITER"]),
+  candidateNoteController.createNote
+);
+
+router.delete(
+  "/:candidateId/notes/:noteId",
+  authMiddleware,
+  requireAnyRole(["ADMIN", "RECRUITER"]),
+  candidateNoteController.deleteNote
+);
+
+// --- CANDIDATE TAGS ROUTES ---
+
+router.post(
+  "/:id/tags",
+  authMiddleware,
+  requireAnyRole(["ADMIN", "RECRUITER"]),
+  addTag
+);
+
+router.delete(
+  "/:id/tags/:tag",
+  authMiddleware,
+  requireAnyRole(["ADMIN", "RECRUITER"]),
+  removeTag
 );
 
 module.exports = router;

@@ -1,6 +1,7 @@
 require("dotenv").config();
 const app = require("./app");
 const { connectDB, sequelize } = require("./config/db");
+const { verifyEmailConfig } = require("./services/email.service");
 require("./models");
 
 const PORT = process.env.PORT || 5000;
@@ -20,6 +21,9 @@ const startServer = async () => {
 
     await sequelize.sync(syncOptions);
     console.log("Tables synced");
+
+    // Verify Email Service
+    await verifyEmailConfig();
 
     // Start Server
     app.listen(PORT, () => {

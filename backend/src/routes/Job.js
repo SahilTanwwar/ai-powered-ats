@@ -1,6 +1,6 @@
 const express = require("express");
 const authMiddleware = require("../middleware/authMiddleware");
-const { requireAnyRole } = require("../middleware/role.middleware");
+const { requireAnyRole, requireRole } = require("../middleware/role.middleware");
 const jobController = require("../controllers/job.controller");
 
 const router = express.Router();
@@ -29,11 +29,11 @@ router.get(
   jobController.getJobById
 );
 
-// DELETE JOB
+// DELETE JOB — ADMIN only
 router.delete(
   "/:id",
   authMiddleware,
-  requireAnyRole(["ADMIN", "RECRUITER"]),
+  requireRole("ADMIN"),
   jobController.deleteJob
 );
 

@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import Layout from "../components/layout/Layout";
 import Skeleton from "../components/ui/Skeleton";
 import { jobs } from "../services/api";
+import { useAuth } from "../context/AuthContext";
 
 //  Create Job Modal 
 function CreateJobModal({ onClose, onCreated }) {
@@ -36,9 +37,9 @@ function CreateJobModal({ onClose, onCreated }) {
     setError(""); setSubmitting(true);
     try {
       const res = await jobs.create({
-        title:              form.title.trim(),
-        description:        form.description.trim(),
-        requiredSkills:     skillList,
+        title: form.title.trim(),
+        description: form.description.trim(),
+        requiredSkills: skillList,
         experienceRequired: form.experienceRequired.trim(),
       });
       toast.success("Job created successfully!");
@@ -55,9 +56,9 @@ function CreateJobModal({ onClose, onCreated }) {
   return (
     <div className="fixed inset-0 z-50 flex">
       {/* Overlay */}
-      <div className="flex-1 bg-black/40" onClick={onClose} />
+      <div className="flex-1 bg-slate-900/20 backdrop-blur-sm" onClick={onClose} />
       {/* Drawer */}
-      <div className="w-full max-w-md bg-white h-full overflow-y-auto shadow-2xl flex flex-col">
+      <div className="w-full max-w-md bg-white/80 backdrop-blur-2xl border-l border-white/50 h-full overflow-y-auto shadow-2xl flex flex-col">
         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200">
           <div>
             <h3 className="font-head font-semibold text-lg text-slate-900">Create New Job</h3>
@@ -150,18 +151,18 @@ function CreateJobModal({ onClose, onCreated }) {
 }
 
 //  Job Card 
-function JobCard({ job, index, onClick, onDelete }) {
+function JobCard({ job, index, onClick, onDelete, isAdmin }) {
   return (
     <div
       onClick={onClick}
-      className="card p-5 cursor-pointer hover:shadow-md transition-all duration-150 group"
+      className="glass-card p-5 cursor-pointer flex flex-col hover:shadow-glow group"
     >
       <div className="flex items-start justify-between gap-3 mb-4">
         <div className="flex-1 min-w-0">
-          <h3 className="font-head font-semibold text-base text-slate-900 mb-1.5 truncate">{job.title}</h3>
+          <h3 className="font-head font-semibold text-base text-slate-900 mb-1.5 truncate group-hover:text-indigo-600 transition-colors">{job.title}</h3>
           <p className="text-slate-500 text-xs leading-relaxed line-clamp-2">{job.description}</p>
         </div>
-        <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500 shrink-0">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100/50 shadow-sm flex items-center justify-center text-indigo-500 shrink-0">
           <Briefcase size={17} />
         </div>
       </div>
@@ -190,13 +191,15 @@ function JobCard({ job, index, onClick, onDelete }) {
             <Calendar size={11} />
             {new Date(job.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
           </span>
-          <button
-            onClick={(e) => { e.stopPropagation(); onDelete(job); }}
-            className="p-1.5 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all"
-            title="Delete job"
-          >
-            <Trash2 size={13} />
-          </button>
+          {isAdmin && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(job); }}
+              className="p-1.5 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all"
+              title="Delete job"
+            >
+              <Trash2 size={13} />
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -206,10 +209,12 @@ function JobCard({ job, index, onClick, onDelete }) {
 //  Main Page 
 export default function Jobs() {
   const navigate = useNavigate();
-  const [allJobs,  setAllJobs]  = useState([]);
-  const [loading,  setLoading]  = useState(true);
-  const [error,    setError]    = useState("");
-  const [query,    setQuery]    = useState("");
+  const { user } = useAuth();
+  const isAdmin = user?.role === "ADMIN";
+  const [allJobs, setAllJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [query, setQuery] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [deleting, setDeleting] = useState(null);
 
@@ -266,7 +271,7 @@ export default function Jobs() {
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-all shadow-sm"
+          className="btn-primary"
         >
           <Plus size={16} /> Create Job
         </button>
@@ -318,6 +323,7 @@ export default function Jobs() {
               key={job.id}
               job={job}
               index={i}
+              isAdmin={isAdmin}
               onClick={() => navigate(`/jobs/${job.id}`)}
               onDelete={handleDelete}
             />
