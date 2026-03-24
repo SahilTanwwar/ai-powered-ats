@@ -1,6 +1,5 @@
 ﻿import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { motion } from "framer-motion";
 import api from "../api/api";
 import AppLayout from "../layout/AppLayout";
 import { Card, Btn, Badge, Icon, PageWrap, Skeleton, ScoreRing, EmptyState } from "../components/UI";

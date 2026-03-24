@@ -151,7 +151,7 @@ function CreateJobModal({ onClose, onCreated }) {
 }
 
 //  Job Card 
-function JobCard({ job, index, onClick, onDelete, isAdmin }) {
+function JobCard({ job, onClick, onDelete, isAdmin }) {
   return (
     <div
       onClick={onClick}
@@ -216,7 +216,7 @@ export default function Jobs() {
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
   const [showModal, setShowModal] = useState(false);
-  const [deleting, setDeleting] = useState(null);
+  const [, setDeleting] = useState(null);
 
   const fetchJobs = async () => {
     try {

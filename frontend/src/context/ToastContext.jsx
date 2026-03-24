@@ -1,5 +1,5 @@
 ﻿import { createContext, useCallback, useContext, useMemo, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { T } from "../theme";
 
 const ToastContext = createContext(null);
@@ -71,6 +71,7 @@ export function ToastProvider({ children }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useToast() {
   const ctx = useContext(ToastContext);
   if (!ctx) {

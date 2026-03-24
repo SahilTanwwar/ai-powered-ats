@@ -1,8 +1,7 @@
 ﻿import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import api from "../api/api";
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../context/AuthContext";
 import { Btn, Input, Spinner, Icon } from "../components/UI";
 import { useToast } from "../context/ToastContext";
 import { T } from "../theme";

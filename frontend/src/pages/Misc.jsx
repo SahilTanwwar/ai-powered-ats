@@ -1,6 +1,5 @@
 ﻿import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../context/AuthContext";
 import AppLayout from "../layout/AppLayout";
 import { Card, Btn, Icon, PageWrap } from "../components/UI";
 import { T } from "../theme";

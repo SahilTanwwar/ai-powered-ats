@@ -6,6 +6,23 @@ const { requireRole } = require("../middleware/role.middleware");
 
 const router = express.Router();
 
+/**
+ * GET /api/users/public
+ * Authenticated but non-admin route to get all active users for 'Network'
+ */
+router.get("/public", authMiddleware, async (req, res) => {
+    try {
+        const users = await User.findAll({
+            where: { role: "RECRUITER", status: "ACTIVE" },
+            attributes: ["id", "email", "role", "status", "createdAt"],
+            order: [["createdAt", "DESC"]],
+        });
+        res.json({ data: users });
+    } catch {
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
 // All routes below require ADMIN role
 router.use(authMiddleware, requireRole("ADMIN"));
 

@@ -13,21 +13,21 @@ export default function TeamNotes({ candidateId }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
+        const fetchNotes = async () => {
+            try {
+                setLoading(true);
+                const res = await candidates.getNotes(candidateId);
+                setNotes(res.data.data || []);
+            } catch (error) {
+                console.error("Failed to load notes:", error);
+                toast.error("Failed to load team notes");
+            } finally {
+                setLoading(false);
+            }
+        };
+        
         fetchNotes();
     }, [candidateId]);
-
-    const fetchNotes = async () => {
-        try {
-            setLoading(true);
-            const res = await candidates.getNotes(candidateId);
-            setNotes(res.data.data || []);
-        } catch (error) {
-            console.error("Failed to load notes:", error);
-            toast.error("Failed to load team notes");
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();

@@ -1,11 +1,10 @@
 ﻿import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Eye, EyeOff, Zap, CheckCircle2, CornerDownRight, Briefcase } from "lucide-react";
 import toast from "react-hot-toast";
 import { auth } from "../services/api";
 
 export default function Register() {
-  const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "", confirm: "" });
   const [showPwd, setShowPwd] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);

@@ -13,8 +13,7 @@ export default function SearchResults() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (!query) {
-            setLoading(false);
+        if (!query.trim()) {
             return;
         }
 
