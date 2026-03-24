@@ -179,7 +179,7 @@ export default function KanbanBoard({ candidates, onStatusChange, onCandidateCli
   };
 
   const handleDragOver = (event) => {
-    const { active, over } = event;
+    const { over } = event;
 
     if (!over) return;
 

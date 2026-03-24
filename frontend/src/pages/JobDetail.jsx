@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDropzone } from "react-dropzone";
 import {
@@ -185,7 +185,7 @@ export default function JobDetail() {
   const [showUpload, setShowUpload] = useState(false);
   const [updatingId, setUpdatingId] = useState(null);
   const [selected, setSelected] = useState(new Set()); // Bulk selection
-  const [bulkAction, setBulkAction] = useState(null); // "STATUS" or "DELETE"
+  const [, setBulkAction] = useState(null); // "STATUS" or "DELETE"
 
   const { user } = useAuth();
   const isAdmin = user?.role === "ADMIN";

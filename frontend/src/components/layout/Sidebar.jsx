@@ -1,8 +1,8 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Briefcase, Users, Settings,
-  LogOut, ChevronLeft, Menu, Zap, ShieldCheck,
+  LogOut, ChevronLeft, Menu, Zap, ShieldCheck, Share2
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
@@ -11,6 +11,7 @@ const BASE_NAV = [
   { to: "/dashboard", label: "Dashboard", Icon: LayoutDashboard },
   { to: "/jobs", label: "Jobs", Icon: Briefcase },
   { to: "/candidates", label: "Candidates", Icon: Users },
+  { to: "/feed", label: "LinkedIn Feed", Icon: Share2 },
   { to: "/settings", label: "Settings", Icon: Settings },
 ];
 

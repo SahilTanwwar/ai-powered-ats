@@ -10,20 +10,20 @@ export default function ScheduledInterviews({ candidateId, jobId }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
+        const fetchInterviews = async () => {
+            try {
+                setLoading(true);
+                const res = await interviews.getByCandidate(candidateId);
+                setInterviewList(res.data.data || []);
+            } catch (error) {
+                console.error("Failed to fetch interviews:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        
         fetchInterviews();
     }, [candidateId]);
-
-    const fetchInterviews = async () => {
-        try {
-            setLoading(true);
-            const res = await interviews.getByCandidate(candidateId);
-            setInterviewList(res.data.data || []);
-        } catch (error) {
-            console.error("Failed to fetch interviews:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleInterviewAdded = (newInterview) => {
         setInterviewList([newInterview, ...interviewList].sort((a, b) => new Date(b.interviewDate) - new Date(a.interviewDate)));

@@ -1,5 +1,5 @@
-﻿import { Suspense, lazy } from "react";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { Suspense, lazy } from "react";
+import { BrowserRouter, Navigate, Route, Routes, Link } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 
@@ -13,6 +13,9 @@ const Candidates = lazy(() => import("./pages/Candidates"));
 const Settings = lazy(() => import("./pages/Settings"));
 const ManageRecruiters = lazy(() => import("./pages/ManageRecruiters"));
 const SearchResults = lazy(() => import("./pages/SearchResults"));
+const Feed = lazy(() => import("./pages/Feed"));
+const Network = lazy(() => import("./pages/Network"));
+const Profile = lazy(() => import("./pages/Profile"));
 
 function LoadingScreen() {
   return (
@@ -61,14 +64,21 @@ function AppRoutes() {
         <Route path="/search" element={<PrivateRoute><SearchResults /></PrivateRoute>} />
         <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
         <Route path="/manage-recruiters" element={<AdminRoute><ManageRecruiters /></AdminRoute>} />
+        
+        {/* LinkedIn Interface Routes */}
+        <Route path="/feed" element={<PrivateRoute><Feed /></PrivateRoute>} />
+        <Route path="/network" element={<PrivateRoute><Network /></PrivateRoute>} />
+        <Route path="/profile/:id" element={<PrivateRoute><Profile /></PrivateRoute>} />
+        <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
+
         <Route path="*" element={
           <div className="min-h-screen bg-bg flex items-center justify-center">
             <div className="text-center">
               <h1 className="font-head text-6xl font-bold text-accent mb-2">404</h1>
               <p className="text-secondary text-lg mb-6">Page not found</p>
-              <a href="/dashboard" className="inline-flex items-center gap-2 px-5 py-2.5 bg-accent text-white rounded-lg text-sm font-semibold hover:bg-blue-700">
+              <Link to="/dashboard" className="inline-flex items-center gap-2 px-5 py-2.5 bg-accent text-white rounded-lg text-sm font-semibold hover:bg-blue-700">
                 Go to Dashboard
-              </a>
+              </Link>
             </div>
           </div>
         } />

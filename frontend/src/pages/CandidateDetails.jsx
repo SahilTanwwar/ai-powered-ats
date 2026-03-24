@@ -1,6 +1,6 @@
 ﻿import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import api from "../api/api";
 import AppLayout from "../layout/AppLayout";
 import { Card, Btn, Badge, Icon, PageWrap, Skeleton, ScoreRing } from "../components/UI";
@@ -69,7 +69,7 @@ export default function CandidateDetails() {
     try {
       await api.patch(`/candidates/${id}/status`, { status });
       setCandidate(c => ({ ...c, status }));
-    } catch (e) { setErr("Failed to update status."); }
+    } catch { setErr("Failed to update status."); }
     finally { setUpdatingStatus(false); }
   };
 
@@ -78,7 +78,7 @@ export default function CandidateDetails() {
     try {
       const res = await api.get(`/candidates/${id}/interview-questions`);
       setQuestions(res.data?.questions || []);
-    } catch (e) { setErr("Failed to generate questions."); }
+    } catch { setErr("Failed to generate questions."); }
     finally { setLoadingQ(false); }
   };
 
@@ -162,9 +162,9 @@ export default function CandidateDetails() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14, marginBottom: 16 }}>
             {[
               { label: "Skills Match", val: bd.skills ?? 0, color: T.indigo },
-              { label: "Semantic Match", val: bd.semantic ?? 0, color: "#8b5cf6" },
-              { label: "Experience", val: bd.experience ?? 0, color: T.success },
-            ].map(({ label, val, color }) => (
+              { label: "Semantic Match", val: bd.semantic ?? 0 },
+              { label: "Experience", val: bd.experience ?? 0 },
+            ].map(({ label, val }) => (
               <div key={label} style={{ textAlign: "center", padding: "16px", background: T.bg, borderRadius: T.r12 }}>
                 <ScoreRing score={Math.round(val)} size={56} />
                 <div style={{ fontSize: 12, fontWeight: 600, color: T.textMid, marginTop: 8 }}>{label}</div>

@@ -82,12 +82,12 @@ export default function CandidateDetail() {
               try {
                 const jobRes = await jobs.getById(found.jobId);
                 setJob(jobRes.data);
-              } catch (e) { /* ignore */ }
+              } catch { /* ignore */ }
             }
           }
         }
-      } catch (e) {
-        setError(e?.response?.data?.message || "Failed to load candidate.");
+      } catch {
+        setError("Failed to load candidate.");
       } finally {
         setLoading(false);
       }
@@ -170,8 +170,6 @@ export default function CandidateDetail() {
   const missing = bd.missingSkills || [];
   const reqSkills = job?.requiredSkills || [];
   const neutral = reqSkills.filter((s) => !matched.includes(s) && !missing.includes(s));
-
-  const colorClass = hybrid >= 80 ? "bg-emerald-500" : hybrid >= 60 ? "bg-amber-400" : "bg-red-400";
 
   return (
     <Layout title={cand.name || "Candidate"}>
