@@ -20,20 +20,22 @@ const ADMIN_NAV = [
 ];
 
 function NavItem({ to, label, Icon, collapsed, onClick }) {
+  const IconComponent = Icon;
+
   return (
     <NavLink to={to} onClick={onClick} className="block">
       {({ isActive }) => (
         <div
           className={`flex items-center px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-200 group
             ${isActive
-              ? "bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100/50 text-indigo-700 shadow-sm font-semibold"
-              : "text-slate-600 hover:bg-white/50 hover:text-slate-900"
+              ? "bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-500/20 dark:to-purple-500/20 border border-indigo-100/50 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-300 shadow-sm font-semibold"
+              : "text-slate-600 dark:text-slate-300 hover:bg-white/50 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white"
             }`}
           title={collapsed ? label : undefined}
         >
-          <Icon
+          <IconComponent
             size={18}
-            className={`shrink-0 ${isActive ? "text-blue-600" : "text-slate-400 group-hover:text-slate-700"}`}
+            className={`shrink-0 ${isActive ? "text-blue-600 dark:text-indigo-300" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-200"}`}
           />
           {!collapsed && (
             <span className="ml-3 text-sm">{label}</span>
@@ -68,17 +70,17 @@ export default function Sidebar({ collapsed, onToggle }) {
 
   return (
     <aside
-      className={`fixed left-0 top-0 h-full bg-white/60 backdrop-blur-xl border-r border-white/40 flex flex-col z-30 transition-all duration-300 shadow-[4px_0_24px_rgba(0,0,0,0.02)]
+      className={`fixed left-0 top-0 h-full bg-white/60 dark:bg-slate-900/90 backdrop-blur-xl border-r border-white/40 dark:border-slate-800 flex flex-col z-30 transition-all duration-300 shadow-[4px_0_24px_rgba(0,0,0,0.02)]
         ${collapsed ? "w-16" : "w-60"}`}
     >
       {/* Logo */}
-      <div className="flex items-center justify-between px-4 py-5 border-b border-slate-100">
+      <div className="flex items-center justify-between px-4 py-5 border-b border-slate-100 dark:border-slate-800">
         {!collapsed && (
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center">
               <Zap size={14} className="text-white" strokeWidth={2.5} />
             </div>
-            <span className="font-head font-bold text-base text-slate-900 tracking-tight">HireAI</span>
+            <span className="font-head font-bold text-base text-slate-900 dark:text-white tracking-tight">HireAI</span>
           </div>
         )}
         {collapsed && (
@@ -89,7 +91,7 @@ export default function Sidebar({ collapsed, onToggle }) {
         {!collapsed && (
           <button
             onClick={onToggle}
-            className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+            className="p-1 rounded-md text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
             aria-label="Collapse sidebar"
           >
             <ChevronLeft size={16} />
@@ -100,27 +102,13 @@ export default function Sidebar({ collapsed, onToggle }) {
       {/* Nav Links */}
       <nav className="flex-1 px-2 py-4 flex flex-col gap-1">
         {!collapsed && (
-          <span className="px-3 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          <span className="px-3 mb-2 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
             Main Menu
           </span>
         )}
-        {BASE_NAV.map((item) => (
+        {NAV.map((item) => (
           <NavItem key={item.to} {...item} collapsed={collapsed} />
         ))}
-
-        {/* Admin-only section */}
-        {isAdmin && (
-          <>
-            {!collapsed && (
-              <span className="px-3 mt-4 mb-2 text-[10px] font-bold text-purple-400 uppercase tracking-widest">
-                Admin
-              </span>
-            )}
-            {ADMIN_NAV.map((item) => (
-              <NavItem key={item.to} {...item} collapsed={collapsed} />
-            ))}
-          </>
-        )}
 
       </nav>
 
@@ -143,22 +131,22 @@ export default function Sidebar({ collapsed, onToggle }) {
       )}
 
       {/* User / Logout */}
-      <div className="px-2 pb-4 border-t border-slate-100 pt-3">
+      <div className="px-2 pb-4 border-t border-slate-100 dark:border-slate-800 pt-3">
         {collapsed ? (
           <button
             onClick={handleLogoutClick}
-            className="w-full flex items-center justify-center p-2.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all"
+            className="w-full flex items-center justify-center p-2.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
             title="Logout"
           >
             <LogOut size={17} />
           </button>
         ) : (
-          <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-50">
+          <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-50 dark:bg-slate-800/80">
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
               {initials}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-xs font-semibold text-slate-900 truncate">
+              <div className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate">
                 {user?.email?.split("@")[0]}
               </div>
               <div className={`text-[10px] font-bold uppercase tracking-wide ${isAdmin ? "text-purple-500" : "text-slate-400"}`}>
@@ -167,7 +155,7 @@ export default function Sidebar({ collapsed, onToggle }) {
             </div>
             <button
               onClick={handleLogoutClick}
-              className="p-1.5 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all"
+              className="p-1.5 rounded-md text-slate-400 dark:text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
               title="Logout"
               aria-label="Logout"
             >
@@ -181,7 +169,7 @@ export default function Sidebar({ collapsed, onToggle }) {
       {collapsed && (
         <button
           onClick={onToggle}
-          className="mx-auto mb-3 p-2 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+          className="mx-auto mb-3 p-2 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
           aria-label="Expand sidebar"
         >
           <Menu size={16} />

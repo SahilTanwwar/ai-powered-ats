@@ -69,7 +69,7 @@ export default function Navbar({ title }) {
   const dismiss = (id) => setNotifs((prev) => prev.filter((n) => n.id !== id));
 
   return (
-    <header className="h-16 bg-white/60 backdrop-blur-xl border-b border-white/40 shadow-sm flex items-center justify-between px-6 sticky top-0 z-20">
+    <header className="h-16 bg-white/60 dark:bg-slate-900/80 backdrop-blur-xl border-b border-white/40 dark:border-slate-800 shadow-sm flex items-center justify-between px-6 sticky top-0 z-20 transition-colors duration-200">
       <h1 className="font-head font-semibold text-lg text-slate-900 dark:text-white tracking-tight">
         {title || "Dashboard"}
       </h1>
