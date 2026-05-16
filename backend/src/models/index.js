@@ -1,6 +1,7 @@
 const Candidate = require("./candidate.model");
 const Job = require("./job");
 const User = require("./User");
+const UserPreference = require("./userPreference.model");
 const Interview = require("./interview.model");
 const AuditLog = require("./auditLog.model");
 const CandidateNote = require("./candidateNote.model");
@@ -25,8 +26,10 @@ Candidate.hasMany(CandidateNote, { foreignKey: "candidateId", onDelete: "CASCADE
 CandidateNote.belongsTo(Candidate, { foreignKey: "candidateId" });
 User.hasMany(CandidateNote, { foreignKey: "userId", onDelete: "CASCADE" });
 CandidateNote.belongsTo(User, { foreignKey: "userId", as: "author" });
+User.hasOne(UserPreference, { foreignKey: "userId", onDelete: "CASCADE" });
+UserPreference.belongsTo(User, { foreignKey: "userId" });
 
 // Interviews & Scheduling
 Interview.belongsTo(User, { foreignKey: "scheduledBy", as: "scheduler" });
 
-module.exports = { Candidate, Job, User, Interview, AuditLog, CandidateNote };
+module.exports = { Candidate, Job, User, UserPreference, Interview, AuditLog, CandidateNote };
