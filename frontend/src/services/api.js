@@ -31,12 +31,15 @@ api.interceptors.response.use(
 export const auth = {
   login: (email, password) => api.post("/auth/login", { email, password }),
   register: (data) => api.post("/auth/register", data),
+  changePassword: (currentPassword, newPassword) => api.patch("/auth/change-password", { currentPassword, newPassword }),
 };
 
 // â”€â”€â”€ Jobs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const jobs = {
   getAll: () => api.get("/jobs"),
   getById: (id) => api.get(`/jobs/${id}`),
+  getPublic: () => api.get("/jobs/public"),
+  getPublicById: (id) => api.get(`/jobs/public/${id}`),
   create: (data) => api.post("/jobs", data),
   deleteJob: (id) => api.delete(`/jobs/${id}`),
 };
@@ -45,6 +48,7 @@ export const jobs = {
 export const candidates = {
   getByJob: (jobId) => api.get(`/candidates/job/${jobId}`),
   uploadResume: (formData) => api.post("/candidates/upload", formData, { headers: { "Content-Type": "multipart/form-data" } }),
+  applyPublic: (formData) => api.post("/candidates/apply", formData, { headers: { "Content-Type": "multipart/form-data" } }),
   updateStatus: (id, status) => api.patch(`/candidates/${id}/status`, { status }),
   deleteCandidate: (id) => api.delete(`/candidates/${id}`),
   getInterviewQuestions: (candidateId) => api.get(`/candidates/${candidateId}/interview-questions`),
@@ -78,6 +82,20 @@ export const users = {
   updateStatus: (id, status) => api.patch(`/users/${id}/status`, { status }),
   create: (data) => api.post("/users", data),
   delete: (id) => api.delete(`/users/${id}`),
+  getMe: () => api.get("/users/me"),
+  updateMyEmail: (email) => api.patch("/users/me/email", { email }),
+  deleteMe: () => api.delete("/users/me"),
+  getPreference: (key) => api.get(`/users/me/preferences/${key}`),
+  savePreference: (key, value) => api.put(`/users/me/preferences/${key}`, { value }),
+  getCompanyProfile: () => api.get("/users/me/company-profile"),
+  saveCompanyProfile: (profile) => api.put("/users/me/company-profile", { profile }),
+  getSubscription: () => api.get("/users/me/subscription"),
+  upgradeSubscription: (plan) => api.post("/users/me/subscription/upgrade", { plan }),
+  getAdminSettings: () => api.get("/users/me/admin-settings"),
+  saveAdminSettings: (settings) => api.put("/users/me/admin-settings", { settings }),
+  uploadMyResume: (formData) => api.post("/users/me/resume", formData, { headers: { "Content-Type": "multipart/form-data" } }),
+  getMyResume: () => api.get("/users/me/resume"),
+  deleteMyResume: () => api.delete("/users/me/resume"),
 };
 
 export const dashboard = {
