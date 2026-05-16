@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { ThumbsUp, MessageSquare, Share2, Send, MoreHorizontal, Globe } from "lucide-react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
 
 export function PostCard({ post }) {
   const [liked, setLiked] = useState(false);
@@ -17,11 +16,7 @@ export function PostCard({ post }) {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-surface rounded-lg shadow-sm border border-border mb-4 overflow-hidden"
-    >
+    <div className="bg-surface rounded-lg shadow-sm border border-border mb-4 overflow-hidden">
       {/* Header */}
       <div className="p-4 flex gap-3 items-start">
         <Link to={`/profile/${post.authorId}`} className="flex-shrink-0">
@@ -106,6 +101,6 @@ export function PostCard({ post }) {
           Send
         </button>
       </div>
-    </motion.div>
+    </div>
   );
 }
