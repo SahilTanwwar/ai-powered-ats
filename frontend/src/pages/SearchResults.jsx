@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
-import { Search, MapPin, Briefcase, Mail, Phone, ChevronRight } from "lucide-react";
+import { Search, Briefcase, Mail, ChevronRight } from "lucide-react";
 import Layout from "../components/layout/Layout";
 import { candidates as candidatesApi } from "../services/api";
 
@@ -10,24 +10,43 @@ export default function SearchResults() {
     const navigate = useNavigate();
 
     const [results, setResults] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(Boolean(query.trim()));
 
     useEffect(() => {
-        if (!query.trim()) {
-            return;
-        }
+        let active = true;
 
-        setLoading(true);
-        candidatesApi.search(query)
-            .then((res) => {
-                setResults(res.data.data || []);
-            })
-            .catch((err) => {
+        const runSearch = async () => {
+            if (!query.trim()) {
+                if (active) {
+                    setResults([]);
+                    setLoading(false);
+                }
+                return;
+            }
+
+            if (active) {
+                setLoading(true);
+            }
+
+            try {
+                const res = await candidatesApi.search(query);
+                if (active) {
+                    setResults(res.data.data || []);
+                }
+            } catch (err) {
                 console.error("Search fetch error:", err);
-            })
-            .finally(() => {
-                setLoading(false);
-            });
+            } finally {
+                if (active) {
+                    setLoading(false);
+                }
+            }
+        };
+
+        runSearch();
+
+        return () => {
+            active = false;
+        };
     }, [query]);
 
     return (
