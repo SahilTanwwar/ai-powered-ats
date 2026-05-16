@@ -63,6 +63,19 @@ const listJobs = async (req, res) => {
   }
 };
 
+const listPublicJobs = async (req, res) => {
+  try {
+    const jobs = await Job.findAll({
+      attributes: ["id", "title", "description", "requiredSkills", "experienceRequired", "createdAt"],
+      order: [["createdAt", "DESC"]],
+    });
+
+    return res.status(200).json(jobs);
+  } catch (error) {
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
 const getJobById = async (req, res) => {
   try {
     const job = await Job.findByPk(req.params.id);
@@ -80,6 +93,22 @@ const getJobById = async (req, res) => {
     }
 
     return res.status(403).json({ message: "Forbidden" });
+  } catch (error) {
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+const getPublicJobById = async (req, res) => {
+  try {
+    const job = await Job.findByPk(req.params.id, {
+      attributes: ["id", "title", "description", "requiredSkills", "experienceRequired", "createdAt"],
+    });
+
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    return res.status(200).json(job);
   } catch (error) {
     return res.status(500).json({ message: "Server error" });
   }
@@ -118,6 +147,8 @@ const deleteJob = async (req, res) => {
 module.exports = {
   createJob,
   listJobs,
+  listPublicJobs,
   getJobById,
+  getPublicJobById,
   deleteJob,
 };

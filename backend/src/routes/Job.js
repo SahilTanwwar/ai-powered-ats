@@ -5,6 +5,10 @@ const jobController = require("../controllers/job.controller");
 
 const router = express.Router();
 
+// PUBLIC JOB DISCOVERY
+router.get("/public", jobController.listPublicJobs);
+router.get("/public/:id", jobController.getPublicJobById);
+
 // CREATE JOB
 router.post(
   "/",
@@ -29,11 +33,11 @@ router.get(
   jobController.getJobById
 );
 
-// DELETE JOB — ADMIN only
+// DELETE JOB — ADMIN and recruiters who own the job
 router.delete(
   "/:id",
   authMiddleware,
-  requireRole("ADMIN"),
+  requireAnyRole(["ADMIN", "RECRUITER"]),
   jobController.deleteJob
 );
 
