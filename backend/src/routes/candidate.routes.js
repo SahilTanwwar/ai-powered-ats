@@ -11,6 +11,16 @@ const { requireAnyRole, requireRole } = require("../middleware/role.middleware")
 const router = express.Router();
 
 /**
+ * 🌐 Public Candidate Application
+ * POST /api/candidates/apply
+ */
+router.post(
+  "/apply",
+  upload.single("resume"),
+  candidateController.applyPublicCandidate
+);
+
+/**
  * 🚀 Upload Candidate Resume
  * POST /api/candidates/upload
  * Protected
