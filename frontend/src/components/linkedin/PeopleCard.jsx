@@ -1,17 +1,12 @@
 import React, { useState } from "react";
 import { UserPlus, Check } from "lucide-react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
 
 export function PeopleCard({ person }) {
   const [connected, setConnected] = useState(false);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="bg-surface rounded-lg shadow-sm border border-border overflow-hidden flex flex-col"
-    >
+    <div className="bg-surface rounded-lg shadow-sm border border-border overflow-hidden flex flex-col">
       {/* Banner */}
       <div className="h-16 bg-muted relative">
         {person.bannerImg ? (
@@ -75,7 +70,7 @@ export function PeopleCard({ person }) {
           )}
         </button>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
