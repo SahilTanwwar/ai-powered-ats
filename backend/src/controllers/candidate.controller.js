@@ -165,6 +165,100 @@ const uploadCandidate = async (req, res) => {
     });
   }
 };
+
+const applyPublicCandidate = async (req, res) => {
+  try {
+    const { name, email, phone, jobId } = req.body;
+
+    if (!name || !email || !jobId) {
+      return res.status(400).json({
+        message: "Name, email and jobId are required",
+      });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({
+        message: "Resume file is required",
+      });
+    }
+
+    const parsedJobId = parseInt(jobId, 10);
+
+    if (isNaN(parsedJobId)) {
+      return res.status(400).json({
+        message: "jobId must be a valid integer",
+      });
+    }
+
+    const job = await Job.findByPk(parsedJobId);
+
+    if (!job) {
+      return res.status(404).json({
+        message: "Job not found",
+      });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const existingCandidate = await Candidate.findOne({
+      where: { email: normalizedEmail, jobId: parsedJobId },
+    });
+
+    if (existingCandidate) {
+      await safeDeleteResume(req.file.path);
+      return res.status(409).json({
+        message: "This candidate has already applied for this job",
+        existingCandidateId: existingCandidate.id,
+      });
+    }
+
+    const candidate = await createCandidate({
+      name,
+      email: normalizedEmail,
+      phone,
+      jobId: parsedJobId,
+      recruiterId: parseInt(job.userId, 10),
+      role: "PUBLIC",
+      resumePath: req.file.path,
+      filePath: req.file.path,
+    });
+
+    const emailTemplate = applicationReceivedEmail(name, job.title);
+    sendEmail({
+      to: normalizedEmail,
+      ...emailTemplate,
+    }).catch((err) => console.error("Email notification failed:", err.message));
+
+    return res.status(201).json({
+      success: true,
+      data: {
+        id: candidate.id,
+        name: candidate.name,
+        email: candidate.email,
+        phone: candidate.phone,
+        jobId: candidate.jobId,
+        status: candidate.status,
+        atsScore: candidate.hybridScore,
+        breakdown: {
+          skills: candidate.scoreBreakdown?.skills || 0,
+          semantic: candidate.scoreBreakdown?.semantic || 0,
+          experience: candidate.scoreBreakdown?.experience || 0,
+        },
+        matchedSkills: candidate.scoreBreakdown?.matchedSkills || [],
+        missingSkills: candidate.scoreBreakdown?.missingSkills || [],
+        aiMatchReason: candidate.aiMatchReason,
+        summary: candidate.aiParsedJson?.summary || null,
+        createdAt: candidate.createdAt,
+      },
+    });
+  } catch (error) {
+    console.error("Public Apply Candidate Error:", error);
+
+    return res.status(error.statusCode || 500).json({
+      message: error.message || "Internal Server Error",
+    });
+  }
+};
 const updateCandidateStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -484,6 +578,7 @@ const removeTag = async (req, res) => {
 
 module.exports = {
   uploadCandidate,
+  applyPublicCandidate,
   listCandidates,
   getInterviewQuestions,
   updateCandidateStatus,

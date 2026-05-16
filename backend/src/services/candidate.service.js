@@ -22,7 +22,7 @@ const createCandidate = async (data) => {
 
   // ADMINs can access any job; RECRUITERs can only access their own
   const whereClause =
-    data.role === "ADMIN"
+    data.role === "ADMIN" || data.role === "PUBLIC"
       ? { id: jobId }
       : { id: jobId, userId: recruiterId };
 

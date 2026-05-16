@@ -10,8 +10,8 @@ const getNotes = async (req, res) => {
 
         if (!candidate) return res.status(404).json({ message: "Candidate not found" });
 
-        // Access control: if recruiter, they must own the job
-        if (req.user.role === "RECRUITER" && candidate.Job.userId !== req.user.id) {
+        // Access control: if recruiter/employer, they must own the job
+        if ((req.user.role === "RECRUITER" || req.user.role === "EMPLOYER") && candidate.Job.userId !== req.user.id) {
             return res.status(403).json({ message: "Forbidden" });
         }
 
