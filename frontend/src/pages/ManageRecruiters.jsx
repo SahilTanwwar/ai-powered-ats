@@ -224,25 +224,27 @@ export default function ManageRecruiters() {
 
             {/* Tabs */}
             <div className="flex gap-1 p-1 bg-slate-100 rounded-xl mb-6 w-fit">
-                {TABS.map(({ key, label, icon: Icon }) => (
+                {TABS.map((tabItem) => {
+                    const TabIcon = tabItem.icon;
+                    return (
                     <button
-                        key={key}
-                        onClick={() => setTab(key)}
+                        key={tabItem.key}
+                        onClick={() => setTab(tabItem.key)}
                         className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-all
-              ${tab === key
+              ${tab === tabItem.key
                                 ? "bg-white text-slate-900 shadow-sm"
                                 : "text-slate-500 hover:text-slate-700"
                             }`}
                     >
-                        <Icon size={14} />
-                        {label}
-                        {key === "PENDING" && pendingCount > 0 && (
+                        <TabIcon size={14} />
+                        {tabItem.label}
+                        {tabItem.key === "PENDING" && pendingCount > 0 && (
                             <span className="ml-1 w-5 h-5 bg-amber-500 text-white rounded-full text-[10px] font-bold flex items-center justify-center">
                                 {pendingCount}
                             </span>
                         )}
                     </button>
-                ))}
+                )})}
             </div>
 
             {/* Content */}
