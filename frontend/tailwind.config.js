@@ -4,28 +4,27 @@
   theme: {
     extend: {
       colors: {
-        primary:   "#09090b",
-        secondary: "#71717a",
-        accent:    "#6366f1", // Indigo 500
-        "accent-light": "#e0e7ff",
-        "accent-hover": "#4f46e5",
-        surface:   "#ffffff",
-        "surface-glass": "rgba(255, 255, 255, 0.7)",
-        bg:        "#f8fafc",
-        border:    "#e4e4e7",
-        success:   "#10b981",
-        warning:   "#f59e0b",
-        danger:    "#ef4444",
-        muted:     "#a1a1aa",
+        primary: "#0A65CC",
+        "primary-hover": "#0854AE",
+        "primary-light": "#E7F0FA",
+        "dark-bg": "#18191C",
+        "dark-muted": "#767F8C",
+        "text-primary": "#18191C",
+        "text-secondary": "#515B6F",
+        "text-muted": "#9199A3",
+        border: "#E4E5E8",
+        success: "#0BA02C",
+        warning: "#E05151",
+        yellow: "#FFB836",
       },
       fontFamily: {
-        sans:  ["Inter", "sans-serif"],
-        head:  ["Outfit", "sans-serif"],
+        sans:  ["Epilogue", "sans-serif"],
+        head:  ["Epilogue", "sans-serif"],
         mono:  ["JetBrains Mono", "monospace"],
       },
       boxShadow: {
         'glass': '0 4px 30px rgba(0, 0, 0, 0.05)',
-        'glow': '0 0 20px rgba(99, 102, 241, 0.4)',
+        'glow': '0 4px 12px rgba(10, 101, 204, 0.2)',
       },
       animation: {
         'blob': 'blob 7s infinite',
