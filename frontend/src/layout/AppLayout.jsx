@@ -1,16 +1,16 @@
 ﻿import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { useAuth } from "../auth/AuthContext";
 import { Icon } from "../components/UI";
 import useIsMobile from "../hooks/useIsMobile";
 import { T } from "../theme";
 
 const NAV = [
-  { to: "/dashboard", label: "Dashboard", Ic: Icon.Grid },
-  { to: "/jobs", label: "Jobs", Ic: Icon.Briefcase },
-  { to: "/candidates", label: "Candidates", Ic: Icon.Users },
-  { to: "/settings", label: "Settings", Ic: Icon.Settings },
+  { to: "/dashboard", label: "Dashboard", icon: Icon.Grid },
+  { to: "/jobs", label: "Jobs", icon: Icon.Briefcase },
+  { to: "/candidates", label: "Candidates", icon: Icon.Users },
+  { to: "/settings", label: "Settings", icon: Icon.Settings },
 ];
 
 function SidebarContent({ onClose }) {
@@ -25,11 +25,10 @@ function SidebarContent({ onClose }) {
       </div>
       <nav style={{ flex: 1, display: "flex", flexDirection: "column", gap: 3 }}>
         <div style={{ fontSize: 10, fontWeight: 700, color: T.textLight, letterSpacing: 0.8, padding: "0 10px", marginBottom: 6, textTransform: "uppercase" }}>Main Menu</div>
-        {NAV.map(({ to, label, Ic }) => (
+        {NAV.map(({ to, label, icon: IconComponent }) => (
           <NavLink key={to} to={to} onClick={onClose}>
             {({ isActive }) => (
-              <motion.div
-                whileHover={{ x: 2 }}
+              <div
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -42,8 +41,8 @@ function SidebarContent({ onClose }) {
                   fontWeight: isActive ? 700 : 600,
                 }}
               >
-                <Ic /> {label}
-              </motion.div>
+                {IconComponent()} {label}
+              </div>
             )}
           </NavLink>
         ))}
@@ -57,9 +56,7 @@ function SidebarContent({ onClose }) {
             <div style={{ fontSize: 12, fontWeight: 700, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user?.email?.split("@")[0]}</div>
             <div style={{ fontSize: 10.5, color: T.textLight }}>{user?.role}</div>
           </div>
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
+          <button
             onClick={() => {
               logout();
               navigate("/login");
@@ -69,7 +66,7 @@ function SidebarContent({ onClose }) {
             aria-label="Logout"
           >
             <Icon.Logout />
-          </motion.button>
+          </button>
         </div>
       </div>
     </>
@@ -121,13 +118,11 @@ export default function AppLayout({ title, children }) {
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: T.bg }}>
       {!isMobile && (
-        <motion.aside
-          initial={{ x: -30, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
+        <aside
           style={{ width: 230, minHeight: "100vh", background: T.white, borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column", padding: "22px 12px", position: "sticky", top: 0, flexShrink: 0 }}
         >
           <SidebarContent />
-        </motion.aside>
+        </aside>
       )}
 
       <AnimatePresence>

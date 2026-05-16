@@ -11,7 +11,7 @@ import {
   X,
   UserCircle
 } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 
 export function LinkedInLayout({ children }) {
@@ -73,11 +73,7 @@ export function LinkedInLayout({ children }) {
                     <Icon className={`h-6 w-6 mb-0.5 ${isActive ? "fill-primary" : ""}`} />
                     <span className="hidden lg:block">{item.name}</span>
                     {isActive && (
-                      <motion.div
-                        layoutId="activeTab"
-                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
-                        initial={false}
-                      />
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
                     )}
                   </Link>
                 );
@@ -111,12 +107,7 @@ export function LinkedInLayout({ children }) {
       {/* Mobile Nav Menu */}
       <AnimatePresence>
         {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-surface border-b border-border shadow-lg overflow-hidden"
-          >
+          <div className="md:hidden bg-surface border-b border-border shadow-lg overflow-hidden">
             <div className="px-2 pt-2 pb-3 space-y-1">
               <div className="p-2 mb-2">
                  <input
@@ -153,7 +144,7 @@ export function LinkedInLayout({ children }) {
                 View Profile
               </Link>
             </div>
-          </motion.div>
+          </div>
         )}
       </AnimatePresence>
 
