@@ -1,10 +1,29 @@
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Building2, Globe, MapPin, Users } from "lucide-react";
+import { ArrowLeft, Briefcase, Building2, Globe, MapPin, Users } from "lucide-react";
 import { PUBLIC_COMPANIES } from "../data/publicData";
+import { jobs } from "../services/api";
+
+const normalizeCompanyName = (value) => (value || "").trim().toLowerCase();
 
 export default function CompanyDetail() {
   const { id } = useParams();
   const company = PUBLIC_COMPANIES.find((item) => String(item.id) === String(id));
+  const [publicJobs, setPublicJobs] = useState([]);
+
+  useEffect(() => {
+    jobs.getPublic()
+      .then((response) => setPublicJobs(response.data || []))
+      .catch(() => setPublicJobs([]));
+  }, []);
+
+  const companyJobs = useMemo(() => {
+    if (!company) return [];
+    const companyName = normalizeCompanyName(company.name);
+    return publicJobs.filter((job) =>
+      normalizeCompanyName(job.Employer?.companyName || job.companyName || job.company) === companyName
+    );
+  }, [company, publicJobs]);
 
   if (!company) {
     return (
@@ -35,7 +54,17 @@ export default function CompanyDetail() {
               <p className="text-sm text-secondary-600">{company.industry}</p>
             </div>
           </div>
-          <Link to="/find-jobs" className="btn btn-primary">View Open Roles ({company.openJobs})</Link>
+          {companyJobs.length > 0 ? (
+            <Link to={`/find-jobs?company=${encodeURIComponent(company.name)}`} className="btn btn-primary">
+              <Briefcase className="h-4 w-4" />
+              {companyJobs.length} open {companyJobs.length === 1 ? "position" : "positions"}
+            </Link>
+          ) : (
+            <span className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium text-secondary-600">
+              <Briefcase className="h-4 w-4" />
+              No open positions
+            </span>
+          )}
         </div>
 
         <p className="mt-6 text-sm leading-6 text-secondary-700">{company.description}</p>
