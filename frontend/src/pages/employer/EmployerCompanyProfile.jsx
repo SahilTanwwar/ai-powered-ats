@@ -60,22 +60,87 @@ export default function EmployerCompanyProfile() {
   };
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-head font-semibold text-dark">Company Profile</h1>
-      <div className="grid md:grid-cols-2 gap-3">
-        <input value={form.name} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} placeholder="Company Name" className="border border-border rounded-lg px-3 py-2.5" />
-        <select value={form.industry} onChange={(event) => setForm((prev) => ({ ...prev, industry: event.target.value }))} className="border border-border rounded-lg px-3 py-2.5"><option>Technology</option><option>Finance</option><option>Healthcare</option></select>
-        <select value={form.size} onChange={(event) => setForm((prev) => ({ ...prev, size: event.target.value }))} className="border border-border rounded-lg px-3 py-2.5"><option>1-10</option><option>11-50</option><option>51-200</option><option>201+</option></select>
-        <input value={form.founded} onChange={(event) => setForm((prev) => ({ ...prev, founded: event.target.value }))} placeholder="Founded Year" className="border border-border rounded-lg px-3 py-2.5" />
-        <input value={form.website} onChange={(event) => setForm((prev) => ({ ...prev, website: event.target.value }))} placeholder="Website" className="border border-border rounded-lg px-3 py-2.5" />
-        <input value={form.phone} onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))} placeholder="Phone" className="border border-border rounded-lg px-3 py-2.5" />
-        <input value={form.email} onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))} placeholder="Email" className="border border-border rounded-lg px-3 py-2.5" />
-        <input value={form.country} onChange={(event) => setForm((prev) => ({ ...prev, country: event.target.value }))} placeholder="Country" className="border border-border rounded-lg px-3 py-2.5" />
-        <input value={form.city} onChange={(event) => setForm((prev) => ({ ...prev, city: event.target.value }))} placeholder="City" className="border border-border rounded-lg px-3 py-2.5" />
-        <input value={form.address} onChange={(event) => setForm((prev) => ({ ...prev, address: event.target.value }))} placeholder="Address" className="border border-border rounded-lg px-3 py-2.5" />
-        <textarea value={form.description} onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))} placeholder="Company Description" className="md:col-span-2 border border-border rounded-lg px-3 py-2.5" rows={4} />
+    <div className="max-w-4xl mx-auto animate-fade-in-up">
+      <div className="bg-[#18191C]/95 backdrop-blur-md border border-white/10 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+        {/* Glow Effect */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 blur-[80px] rounded-full pointer-events-none translate-x-1/3 -translate-y-1/3"></div>
+
+        <div className="mb-8 border-b border-white/10 pb-6 relative z-10">
+          <h1 className="text-3xl font-head font-bold text-white mb-2">Company Profile</h1>
+          <p className="text-[#9199A3]">Manage your brand's presence and visibility on the platform.</p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6 relative z-10">
+          <div className="md:col-span-2 space-y-1.5">
+             <label className="text-sm font-medium text-white/80">Company Name</label>
+             <input value={form.name} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} placeholder="e.g. Acme Corp" className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-white/30" />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-white/80">Industry</label>
+            <select value={form.industry} onChange={(event) => setForm((prev) => ({ ...prev, industry: event.target.value }))} className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all appearance-none">
+              <optgroup className="bg-slate-800 text-white">
+                <option>Technology</option><option>Finance</option><option>Healthcare</option><option>Education</option><option>Retail</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-white/80">Company Size</label>
+            <select value={form.size} onChange={(event) => setForm((prev) => ({ ...prev, size: event.target.value }))} className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all appearance-none">
+              <optgroup className="bg-slate-800 text-white">
+                <option>1-10</option><option>11-50</option><option>51-200</option><option>201-500</option><option>500+</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-white/80">Founded Year</label>
+            <input value={form.founded} onChange={(event) => setForm((prev) => ({ ...prev, founded: event.target.value }))} placeholder="e.g. 2010" className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-white/30" />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-white/80">Website</label>
+            <input value={form.website} onChange={(event) => setForm((prev) => ({ ...prev, website: event.target.value }))} placeholder="https://example.com" className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-white/30" />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-white/80">Contact Phone</label>
+            <input value={form.phone} onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))} placeholder="+1 (555) 000-0000" className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-white/30" />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-white/80">Contact Email</label>
+            <input value={form.email} onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))} placeholder="careers@example.com" className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-white/30" />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-white/80">Country</label>
+            <input value={form.country} onChange={(event) => setForm((prev) => ({ ...prev, country: event.target.value }))} placeholder="e.g. United States" className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-white/30" />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-white/80">City</label>
+            <input value={form.city} onChange={(event) => setForm((prev) => ({ ...prev, city: event.target.value }))} placeholder="e.g. San Francisco" className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-white/30" />
+          </div>
+
+          <div className="md:col-span-2 space-y-1.5">
+            <label className="text-sm font-medium text-white/80">Full Address</label>
+            <input value={form.address} onChange={(event) => setForm((prev) => ({ ...prev, address: event.target.value }))} placeholder="123 Tech Lane, Suite 400" className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-white/30" />
+          </div>
+
+          <div className="md:col-span-2 space-y-1.5">
+            <label className="text-sm font-medium text-white/80">Company Description</label>
+            <textarea value={form.description} onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))} placeholder="Tell candidates about your company's mission and culture..." className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-white/30" rows={5} />
+          </div>
+        </div>
+
+        <div className="mt-10 pt-6 border-t border-white/10 flex justify-end relative z-10">
+          <button type="button" onClick={saveProfile} className="bg-primary hover:bg-primary-hover text-white px-8 py-3 rounded-xl font-medium transition-all shadow-glow hover:-translate-y-0.5">
+            Save Profile Changes
+          </button>
+        </div>
       </div>
-      <button type="button" onClick={saveProfile} className="btn btn-primary px-4 py-2.5">Save Changes</button>
     </div>
   );
 }

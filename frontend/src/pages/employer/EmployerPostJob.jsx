@@ -69,34 +69,98 @@ export default function EmployerPostJob() {
   };
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-head font-semibold text-dark">Post a Job</h1>
-      <div className="grid md:grid-cols-2 gap-3">
-        <input value={form.title} onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))} placeholder="Job Title" className="border border-border rounded-lg px-3 py-2.5" />
-        <select value={form.category} onChange={(event) => setForm((prev) => ({ ...prev, category: event.target.value }))} className="border border-border rounded-lg px-3 py-2.5">
-          <option>Engineering</option><option>Design</option><option>Marketing</option>
-        </select>
-        <select value={form.type} onChange={(event) => setForm((prev) => ({ ...prev, type: event.target.value }))} className="border border-border rounded-lg px-3 py-2.5">
-          <option>Full Time</option><option>Part Time</option><option>Remote</option><option>Contract</option><option>Internship</option>
-        </select>
-        <select value={form.level} onChange={(event) => setForm((prev) => ({ ...prev, level: event.target.value }))} className="border border-border rounded-lg px-3 py-2.5">
-          <option>Entry</option><option>Mid</option><option>Senior</option><option>Executive</option>
-        </select>
-        <input value={form.salaryMin} onChange={(event) => setForm((prev) => ({ ...prev, salaryMin: event.target.value }))} placeholder="Salary Min" className="border border-border rounded-lg px-3 py-2.5" />
-        <input value={form.salaryMax} onChange={(event) => setForm((prev) => ({ ...prev, salaryMax: event.target.value }))} placeholder="Salary Max" className="border border-border rounded-lg px-3 py-2.5" />
-        <input value={form.experience} onChange={(event) => setForm((prev) => ({ ...prev, experience: event.target.value }))} placeholder="Experience" className="border border-border rounded-lg px-3 py-2.5" />
-        <input type="date" value={form.deadline} onChange={(event) => setForm((prev) => ({ ...prev, deadline: event.target.value }))} className="border border-border rounded-lg px-3 py-2.5" />
-        <input value={form.location} onChange={(event) => setForm((prev) => ({ ...prev, location: event.target.value }))} placeholder="Location" className="md:col-span-2 border border-border rounded-lg px-3 py-2.5" />
-        <textarea value={form.description} onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))} placeholder="Job Description" className="md:col-span-2 border border-border rounded-lg px-3 py-2.5" rows={4} />
-        <textarea value={form.responsibilities} onChange={(event) => setForm((prev) => ({ ...prev, responsibilities: event.target.value }))} placeholder="Responsibilities" className="md:col-span-2 border border-border rounded-lg px-3 py-2.5" rows={3} />
-        <input value={form.skills} onChange={(event) => setForm((prev) => ({ ...prev, skills: event.target.value }))} placeholder="Required skills (comma separated)" className="md:col-span-2 border border-border rounded-lg px-3 py-2.5" />
-      </div>
+    <div className="max-w-4xl mx-auto animate-fade-in-up">
+      <div className="bg-[#18191C]/95 backdrop-blur-md border border-white/10 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+        {/* Glow Effect */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 blur-[80px] rounded-full pointer-events-none translate-x-1/3 -translate-y-1/3"></div>
 
-      <div className="flex gap-3">
-        <button type="button" onClick={saveDraft} className="btn btn-secondary px-4 py-2.5">Save as Draft</button>
-        <button type="button" onClick={postJob} disabled={submitting} className="btn btn-primary px-4 py-2.5 disabled:opacity-60">
-          {submitting ? "Posting..." : "Post Job"}
-        </button>
+        <div className="mb-8 border-b border-white/10 pb-6 relative z-10">
+          <h1 className="text-3xl font-head font-bold text-white mb-2">Create New Posting</h1>
+          <p className="text-[#9199A3]">Fill out the details below to publish your opening to the board.</p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6 relative z-10">
+          <div className="md:col-span-2 space-y-1.5">
+             <label className="text-sm font-medium text-white/80">Job Title</label>
+             <input value={form.title} onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))} placeholder="e.g. Senior Frontend Developer" className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-white/30" />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-white/80">Category</label>
+            <select value={form.category} onChange={(event) => setForm((prev) => ({ ...prev, category: event.target.value }))} className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all appearance-none">
+              <optgroup className="bg-slate-800 text-white">
+                <option>Engineering</option><option>Design</option><option>Marketing</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-white/80">Job Type</label>
+            <select value={form.type} onChange={(event) => setForm((prev) => ({ ...prev, type: event.target.value }))} className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all appearance-none">
+              <optgroup className="bg-slate-800 text-white">
+                <option>Full Time</option><option>Part Time</option><option>Remote</option><option>Contract</option><option>Internship</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-white/80">Seniority Level</label>
+            <select value={form.level} onChange={(event) => setForm((prev) => ({ ...prev, level: event.target.value }))} className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all appearance-none">
+              <optgroup className="bg-slate-800 text-white">
+                <option>Entry</option><option>Mid</option><option>Senior</option><option>Executive</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-white/80">Experience Required</label>
+            <input value={form.experience} onChange={(event) => setForm((prev) => ({ ...prev, experience: event.target.value }))} placeholder="e.g. 3+ years" className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-white/30" />
+          </div>
+
+          <div className="space-y-1.5">
+             <label className="text-sm font-medium text-white/80">Minimum Salary (USD)</label>
+             <input value={form.salaryMin} onChange={(event) => setForm((prev) => ({ ...prev, salaryMin: event.target.value }))} placeholder="e.g. 80000" className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-white/30" />
+          </div>
+
+          <div className="space-y-1.5">
+             <label className="text-sm font-medium text-white/80">Maximum Salary (USD)</label>
+             <input value={form.salaryMax} onChange={(event) => setForm((prev) => ({ ...prev, salaryMax: event.target.value }))} placeholder="e.g. 120000" className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-white/30" />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-white/80">Application Deadline</label>
+            <input type="date" value={form.deadline} onChange={(event) => setForm((prev) => ({ ...prev, deadline: event.target.value }))} className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all [color-scheme:dark]" />
+          </div>
+
+          <div className="space-y-1.5">
+             <label className="text-sm font-medium text-white/80">Location</label>
+             <input value={form.location} onChange={(event) => setForm((prev) => ({ ...prev, location: event.target.value }))} placeholder="e.g. San Francisco, CA or Remote" className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-white/30" />
+          </div>
+
+          <div className="md:col-span-2 space-y-1.5">
+             <label className="text-sm font-medium text-white/80">Required Skills</label>
+             <input value={form.skills} onChange={(event) => setForm((prev) => ({ ...prev, skills: event.target.value }))} placeholder="React, Node.js, TypeScript (comma separated)" className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-white/30" />
+          </div>
+
+          <div className="md:col-span-2 space-y-1.5">
+             <label className="text-sm font-medium text-white/80">Job Description</label>
+             <textarea value={form.description} onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))} placeholder="Provide a detailed overview of the role..." className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-white/30" rows={5} />
+          </div>
+
+          <div className="md:col-span-2 space-y-1.5">
+             <label className="text-sm font-medium text-white/80">Key Responsibilities</label>
+             <textarea value={form.responsibilities} onChange={(event) => setForm((prev) => ({ ...prev, responsibilities: event.target.value }))} placeholder="What will the day-to-day look like?" className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-white/30" rows={4} />
+          </div>
+        </div>
+
+        <div className="mt-10 pt-6 border-t border-white/10 flex flex-col sm:flex-row gap-4 justify-end relative z-10">
+          <button type="button" onClick={saveDraft} className="px-6 py-3 rounded-xl border border-white/10 text-white font-medium hover:bg-white/5 transition-colors">
+            Save as Draft
+          </button>
+          <button type="button" onClick={postJob} disabled={submitting} className="bg-primary hover:bg-primary-hover text-white px-8 py-3 rounded-xl font-medium transition-all shadow-glow disabled:opacity-60 disabled:cursor-not-allowed">
+            {submitting ? "Publishing Job..." : "Publish Job Posting"}
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -6,7 +6,7 @@ const items = [
   { to: "/dashboard/candidate/applied", label: "Applied Jobs", icon: Briefcase },
   { to: "/dashboard/candidate/favourites", label: "Favourite Jobs", icon: Heart },
   { to: "/dashboard/candidate/alerts", label: "Job Alerts", icon: Bell },
-  { to: "/dashboard/messages", label: "Messages", icon: MessageSquare },
+  { to: "/dashboard/candidate/messages", label: "Messages", icon: MessageSquare },
   { to: "/dashboard/candidate/profile", label: "My Profile", icon: User },
   { to: "/dashboard/candidate/resume", label: "My Resume", icon: FileText },
   { to: "/dashboard/candidate/settings", label: "Settings", icon: Settings },

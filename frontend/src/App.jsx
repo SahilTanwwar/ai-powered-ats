@@ -156,8 +156,7 @@ function AppRoutes() {
         >
           <Route index element={<CandidateOverview />} />
           <Route path="applied" element={<CandidateAppliedJobs />} />
-          <Route path="favourites" element={<CandidateFavourites />} />
-          <Route path="alerts" element={<CandidateAlerts />} />
+          <Route path="favourites" element={<CandidateFavourites />} />          <Route path="messages" element={<Messages />} />          <Route path="alerts" element={<CandidateAlerts />} />
           <Route path="profile" element={<CandidateProfileEdit />} />
           <Route path="resume" element={<CandidateResume />} />
           <Route path="settings" element={<CandidateSettings />} />
@@ -175,6 +174,7 @@ function AppRoutes() {
           <Route path="post-job" element={<EmployerPostJob />} />
           <Route path="jobs" element={<EmployerMyJobs />} />
           <Route path="applicants" element={<EmployerApplicants />} />
+          <Route path="messages" element={<Messages />} />
           <Route path="saved-candidates" element={<EmployerSavedCandidates />} />
           <Route path="company-profile" element={<EmployerCompanyProfile />} />
           <Route path="subscriptions" element={<EmployerSubscriptions />} />
@@ -186,17 +186,10 @@ function AppRoutes() {
           <Route path="recruiters" element={<AdminRecruiters />} />
           <Route path="jobs" element={<AdminJobs />} />
           <Route path="candidates" element={<AdminCandidates />} />
+          <Route path="messages" element={<Messages />} />
           <Route path="settings" element={<AdminSettings />} />
         </Route>
 
-        <Route
-          path="/dashboard/messages"
-          element={
-            <RoleRoute allowedRoles={["CANDIDATE", "RECRUITER", "ADMIN"]}>
-              <Messages />
-            </RoleRoute>
-          }
-        />
         <Route path="/manage-recruiters" element={<AdminRoute><ManageRecruiters /></AdminRoute>} />
         <Route path="/profile" element={<PrivateRoute><MyProfile /></PrivateRoute>} />
 

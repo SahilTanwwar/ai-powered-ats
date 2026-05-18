@@ -40,11 +40,6 @@ export default function PublicNavbar() {
         <div className="hidden md:flex items-center gap-4">
           {user ? (
             <div className="flex items-center gap-5">
-              <button className="text-text-secondary hover:text-primary relative transition-colors">
-                <Bell size={20} />
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
-              </button>
-              
               <div className="relative">
                 <button 
                   onClick={() => setUserMenuOpen(!userMenuOpen)} 

@@ -25,11 +25,9 @@ export default function Footer() {
         <div>
           <h4 className="font-head text-[18px] font-medium mb-6">Quick Link</h4>
           <ul className="flex flex-col gap-4 text-[#9199A3] text-[14px]">
-            <li><Link to="/" className="hover:text-white transition-colors">About</Link></li>
             <li><Link to="/find-jobs" className="hover:text-white transition-colors">Find a Job</Link></li>
             <li><Link to="/companies" className="hover:text-white transition-colors">Find Employer</Link></li>
             <li><Link to="/dashboard" className="hover:text-white transition-colors">Dashboard</Link></li>
-            <li><Link to="/blog" className="hover:text-white transition-colors">Pricing Plan</Link></li>
           </ul>
         </div>
 
@@ -39,8 +37,6 @@ export default function Footer() {
             <li><Link to="/find-jobs" className="hover:text-white transition-colors">Browse Jobs</Link></li>
             <li><Link to="/companies" className="hover:text-white transition-colors">Browse Employers</Link></li>
             <li><Link to="/dashboard" className="hover:text-white transition-colors">Candidate Dashboard</Link></li>
-            <li><Link to="/dashboard" className="hover:text-white transition-colors">Job Alerts</Link></li>
-            <li><Link to="/dashboard" className="hover:text-white transition-colors">Saved Jobs</Link></li>
           </ul>
         </div>
 
@@ -50,19 +46,13 @@ export default function Footer() {
             <li><Link to="/login" className="hover:text-white transition-colors">Post a Job</Link></li>
             <li><Link to="/candidates" className="hover:text-white transition-colors">Browse Candidates</Link></li>
             <li><Link to="/dashboard" className="hover:text-white transition-colors">Employers Dashboard</Link></li>
-            <li><Link to="/dashboard" className="hover:text-white transition-colors">Applications</Link></li>
-            <li><Link to="/blog" className="hover:text-white transition-colors">Plans</Link></li>
           </ul>
         </div>
       </div>
 
       <div className="border-t border-white/10 py-6">
         <div className="max-w-[1200px] mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-[#9199A3] text-[14px]">© 2026 Jobpilot - Job Portal. All rights Rerserved.</p>
-          <div className="flex gap-6 text-[#9199A3] text-[14px]">
-            <Link to="/blog" className="hover:text-white transition-colors">Terms of Service</Link>
-            <Link to="/blog" className="hover:text-white transition-colors">Privacy Policy</Link>
-          </div>
+          <p className="text-[#9199A3] text-[14px]">© 2026 Jobpilot - Job Portal. All rights reserved.</p>
         </div>
       </div>
     </footer>

@@ -6,7 +6,7 @@ const items = [
   { to: "/dashboard/admin/recruiters", label: "Recruiters", icon: Users },
   { to: "/dashboard/admin/jobs", label: "Jobs", icon: Briefcase },
   { to: "/dashboard/admin/candidates", label: "Candidates", icon: UserRound },
-  { to: "/dashboard/messages", label: "Messages", icon: MessageSquare },
+  { to: "/dashboard/admin/messages", label: "Messages", icon: MessageSquare },
   { to: "/dashboard/admin/settings", label: "Settings", icon: Settings },
 ];
 
